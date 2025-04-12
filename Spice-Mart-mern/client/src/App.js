@@ -1,0 +1,51 @@
+import React from 'react'
+import {Routes,Route} from "react-router-dom"
+import Home from './pages/Home'
+import Shop from './pages/Shop'
+import Blog from './pages/Blog'
+import Contact from './pages/Contact'
+import PageNotFound from './pages/PageNotFound'
+import Signup from './pages/Signup'
+import LoginPage from './pages/LoginPage'
+import About from './pages/About'
+import Policy from './pages/Policy'
+import Cart from './pages/Cart'
+import Wishlist from './pages/Wishlist'
+import {ToastContainer} from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import VerifyOTP from './pages/VerifyOtp'
+import AuthSuccess from './pages/AuthSuccess'
+import Profile from './pages/Profile'
+function App() {
+  return (
+    <>
+        <Routes>
+          <Route path='/' element={<Home/>}/>  
+          <Route path='/shop' element={<Shop/>}/>  
+          <Route path='/blogs' element={<Blog/>}/>  
+          <Route path='/contact' element={<Contact/>}/>  
+          <Route path='*' element={<PageNotFound/>}/>  
+          <Route path='/signup' element={<Signup/>}/>  
+          <Route path='/login' element={<LoginPage/>}/>
+          <Route path='/about' element={<About/>}/>
+          <Route path='/policy' element={<Policy/>}/>
+          <Route path='/blogs' element={<Blog/>}/>
+          <Route path='/cart' element={<Cart/>}/>
+          <Route path='/wishlist' element={<Wishlist/>}/>
+          <Route path='/verify-otp' element={<VerifyOTP/>}/>
+          <Route path='/success' element={<AuthSuccess/>}/>
+          <Route path='/profile' element={<Profile/>}/>
+
+
+
+
+
+
+          
+        </Routes> 
+       
+    </>
+  )
+}
+
+export default App
