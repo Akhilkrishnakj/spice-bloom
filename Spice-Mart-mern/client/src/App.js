@@ -17,6 +17,7 @@ import AuthSuccess from './pages/AuthSuccess';
 import Profile from './pages/Profile';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
@@ -31,11 +32,19 @@ function App() {
         <Route path='/login' element={<LoginPage />} />
         <Route path='/about' element={<About />} />
         <Route path='/policy' element={<Policy />} />
-        <Route path='/cart' element={<Cart />} />
-        <Route path='/wishlist' element={<Wishlist />} />
+        {/* <Route path='/cart' element={<Cart />} /> */}
+        {/* <Route path='/wishlist' element={<Wishlist />} /> */}
         <Route path='/verify-otp' element={<VerifyOTP />} />
         <Route path='/success' element={<AuthSuccess />} />
-        <Route path='/profile' element={<Profile />} />
+        {/* <Route path='/profile' element={<Profile />} /> */}
+
+           {/* Private Routes */}
+           <Route element={<PrivateRoute />}>
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/cart" element={<Cart />} />
+        </Route>
+
       </Routes>
       <ToastContainer />
     </AuthProvider>
