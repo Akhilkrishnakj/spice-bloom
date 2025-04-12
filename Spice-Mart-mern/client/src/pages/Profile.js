@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Layout from '../components/Layouts/Layout';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '../index.css'
+import { useAuth } from '../context/AuthContext';
 import { 
   faUser, 
   faEnvelope, 
@@ -17,6 +18,8 @@ import {
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
+
+  const {logout} =  useAuth();
   
   const [userInfo, setUserInfo] = useState({
     name: 'John Doe',
@@ -35,6 +38,11 @@ const Profile = () => {
     e.preventDefault();
     setIsEditing(false);
     // Add API call to save user info
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/login';
   };
 
   const renderProfileContent = () => {
@@ -164,7 +172,7 @@ const Profile = () => {
           >
             <FontAwesomeIcon icon={faCog} /> Settings
           </div>
-          <div className="nav-item logout">
+          <div className="nav-item logout" onClick={handleLogout}>
             <FontAwesomeIcon icon={faSignOutAlt} /> Logout
           </div>
         </div>

@@ -4,56 +4,83 @@ import JWT from "jsonwebtoken";
 
 
 export const registerController = async (req, res) => {
-    try {
-        console.log(req.body);
-      const { name, email, password, phone, confirmPassword } = req.body;
-  
-      // validation
-      if (!name) return res.send({ message: "Name is required" });
-      if (!email) return res.send({ message: "Email is required" });
-      if (!password) return res.send({ message: "Password is required" });
-      if (!phone) return res.send({ message: "Phone is required" });
-      if (!confirmPassword) return res.send({ message: "Confirm Password is required" });
-  
-      // check user
-      const user = await userModel.findOne({ email });
-      if (user) {
-        return res.status(200).send({
-          success: false,
-          message: "User already registered",
-        });
-      }
-  
-      // hash password
-      const hashedPassword = await hashPassword(password);
-  
-      // register user
-      const newUser = new userModel({
-        name,
-        email,
-        password: hashedPassword,
-        phone
-       });
-  
-      await newUser.save();
+  try {
+    const { name, email, password, phone, confirmPassword } = req.body;
 
-      console.log(newUser);
-  
-      return res.status(201).send({
-        success: true,
-        message: "User registered successfully",
-        user: newUser,
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({
+    // === Validation ===
+    if (!name) {
+      return res.status(400).send({ message: "Name is required" });
+    }
+    if (!email) {
+      return res.status(400).send({ message: "Email is required" });
+    }
+    if (!password) {
+      return res.status(400).send({ message: "Password is required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).send({ message: "Password must be at least 6 characters" });
+    }
+    if (!confirmPassword) {
+      return res.status(400).send({ message: "Confirm Password is required" });
+    }
+    if (password !== confirmPassword) {
+      return res.status(400).send({ message: "Passwords do not match" });
+    }
+    if (!phone) {
+      return res.status(400).send({ message: "Phone is required" });
+    }
+
+    // === Check if user already exists ===
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return res.status(409).send({
         success: false,
-        message: "Error in registration",
-        error,
+        message: "User already registered",
       });
     }
-};
 
+    // === Hash password ===
+    const hashedPassword = await hashPassword(password);
+
+    // === Create user ===
+    const newUser = new userModel({
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+    });
+
+    await newUser.save();
+
+    // === Generate JWT token (optional) ===
+    const token = await JWT.sign(
+      { _id: newUser._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // === Send response ===
+    return res.status(201).send({
+      success: true,
+      message: "User registered successfully",
+      user: {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        phone: newUser.phone,
+      },
+      token, // optional
+    });
+
+  } catch (error) {
+    console.error("Register Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error in registration",
+      error: error.message,
+    });
+  }
+};
 export const loginController = async (req, res) => {
     try {
         console.log("JWT_SECRET:", process.env.JWT_SECRET);

@@ -26,7 +26,7 @@ const Signup = () => {
       if (res.data.success) {
         toast.success('OTP sent to email ');
         console.log('navigating to verify otp...');
-        navigate('/verify-otp', { state: { email, phone ,password} });
+        navigate('/verify-otp', { state: { name,email, phone ,password} });
       } else {
         toast.error(res.data.message);
       }

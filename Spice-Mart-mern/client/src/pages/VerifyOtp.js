@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import '../index.css';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const VerifyOTP = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -13,7 +14,7 @@ const VerifyOTP = () => {
   const inputRefs = useRef([]);
   const navigate = useNavigate();
   const location = useLocation();
-
+  const { login ,setUser} = useAuth();
   const name = location.state?.name || '';
   const email = location.state?.email || '';
   const phone = location.state?.phone || '';
@@ -95,7 +96,15 @@ const VerifyOTP = () => {
 
 
       if (res.data.success) {
+        // ✅ Save token and user to localStorage
+          localStorage.setItem('token', res.data.token);
+          localStorage.setItem('user', JSON.stringify(res.data.user));
+   
+       // ✅ Set user in context
+           setUser(res.data.user);
+   
         toast.success('Account verified successfully!');
+        login(res.data.user);
         navigate('/success');
       } else {
         setError(res.data.message || 'Invalid OTP');

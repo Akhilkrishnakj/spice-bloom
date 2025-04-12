@@ -2,10 +2,11 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCartShopping,faHeart,faUser } from '@fortawesome/free-solid-svg-icons';
-
+import { useAuth } from '../../context/AuthContext';
 import './Header.css';
 
 const Header = () => {
+  const { user } = useAuth();
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
@@ -55,17 +56,19 @@ const Header = () => {
                   <span className="cart-count">3</span>
              </NavLink>
 
-             {/* User Icon */}
-            <NavLink to="/profile" className="me-4 my-auto user-icon">
-                <FontAwesomeIcon icon={faUser} size="lg" />
-            </NavLink>
+             {
+                  !user ? (
+                   <div className="auth-buttons d-flex gap-2">
+                      <NavLink to="/login" className="btn btn-success rounded-pill px-4 py-2">Login</NavLink>
+                      <NavLink to="/signup" className="btn btn-outline-success rounded-pill px-4 py-2">Signup</NavLink>
+                    </div>
+             ) : (
+                 <NavLink to="/profile" className="me-4 my-auto user-icon">
+                    <FontAwesomeIcon icon={faUser} size="lg" />
+                </NavLink>
+                  )
+              }
 
-
-            {/* Login / Signup buttons */}
-            <div className="auth-buttons d-flex gap-2">
-              <NavLink to="/login" className="btn btn-success rounded-pill px-4 py-2">Login</NavLink>
-              <NavLink to="/signup" className="btn btn-outline-success rounded-pill px-4 py-2">Signup</NavLink>
-            </div>
           </div>
         </div>
       </nav>

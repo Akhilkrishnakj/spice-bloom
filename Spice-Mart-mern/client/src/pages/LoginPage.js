@@ -5,11 +5,14 @@ import { Link } from 'react-router-dom'; // Add this import
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const LoginPage = ({ message }) => {
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
    const navigate = useNavigate();
+   const { login } = useAuth();
+   
     const handleSubmit = async (e) => {
       e.preventDefault();
       try {
@@ -18,6 +21,7 @@ const LoginPage = ({ message }) => {
           password
         });
         if( res && res.data.success){
+          login(res.data.user);
           toast.success(res.data.message)
           navigate("/");
         }else{

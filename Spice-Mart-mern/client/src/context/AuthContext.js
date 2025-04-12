@@ -1,20 +1,32 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from "react";
 
-// Create the context
 const AuthContext = createContext();
 
-// Custom hook for easy access
-export const useAuth = () => useContext(AuthContext);
-
-// Provider component
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // You can store email, token, etc.
+  const [user, setUser] = useState(null);
+
+  // Get user from localStorage if already logged in
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Error parsing user data from localStorage", error);
+        // Optionally, clear invalid data from localStorage
+        localStorage.removeItem("user");
+      }
+    }
+  }, []);
+  
 
   const login = (userData) => {
+    localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
+    localStorage.removeItem("user");
     setUser(null);
   };
 
@@ -25,3 +37,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+export const useAuth = () => useContext(AuthContext);
