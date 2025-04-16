@@ -8,16 +8,11 @@ const PrivateRoute = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    const token = storedUser?.token;
-    
-    // If there's no token in localStorage, set isAuthenticated to false
+    const token = localStorage.getItem("authToken"); // 👈 Fixed here
+
     if (!token) {
       setIsAuthenticated(false);
-      toast.error("Unauthorized! Please login to access this page.");
     } else {
-      // Simulate token validation (you can call an API for real token validation)
-      // For now, we assume that if token exists, user is authenticated.
       setIsAuthenticated(true);
     }
 
@@ -28,11 +23,12 @@ const PrivateRoute = () => {
     return <div className="text-center mt-5">Checking credentials...</div>;
   }
 
-  return isAuthenticated ? (
-    <Outlet />
-  ) : (
-    <Navigate to="/login" state={{ from: location }} replace />
-  );
+  if (!isAuthenticated) {
+    toast.error("Unauthorized! Please login to access this page.");
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <Outlet />;
 };
 
 export default PrivateRoute;

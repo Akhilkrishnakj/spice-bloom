@@ -21,4 +21,8 @@ router.post('/send-otp', sendOTP);
 //verify OTP
 router.post('/verify-otp', verifyOTP);
 
+router.get('/admin-dashboard', requireSignIn, isAdmin, (req, res) => {
+    res.status(200).send({ ok: true });
+});
+
 export default router;

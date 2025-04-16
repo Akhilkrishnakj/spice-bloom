@@ -1,7 +1,10 @@
 import userModel from "../models/userModel.js";
-import { hashPassword ,comparePassword } from "../helpers/authHelper.js";
+import { hashPassword, comparePassword } from "../helpers/authHelper.js";
 import JWT from "jsonwebtoken";
+import dotenv from 'dotenv';
 
+// Load environment variables
+dotenv.config();
 
 export const registerController = async (req, res) => {
   try {
@@ -53,7 +56,7 @@ export const registerController = async (req, res) => {
     await newUser.save();
 
     // === Generate JWT token (optional) ===
-    const token = await JWT.sign(
+    const token = JWT.sign(
       { _id: newUser._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -69,7 +72,7 @@ export const registerController = async (req, res) => {
         email: newUser.email,
         phone: newUser.phone,
       },
-      token, // optional
+      token,
     });
 
   } catch (error) {
@@ -81,64 +84,71 @@ export const registerController = async (req, res) => {
     });
   }
 };
+
 export const loginController = async (req, res) => {
-    try {
-        console.log("JWT_SECRET:", process.env.JWT_SECRET);
+  try {
+    console.log("JWT_SECRET:", process.env.JWT_SECRET);
 
-        const { email, password } = req.body;
-        // validation
-        if(!email || !password) {
-            return res.status(400).send({
-                success: false,
-                message: "Invalid email or password",
-            });
-        }
-        // check user   
-      const user = await userModel.findOne({ email }); 
-      if(!user){
-        return res.status(404).send({
-            success: false,
-            message: "User not found",
-        });
-      }
-      const match = await comparePassword(password,user.password);
-        if(!match){
-            return res.status(200).send({
-                success: false,
-                message: "Invalid credentials",
-            });
-        }
-        // token
-        const token = await JWT.sign({ _id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: "7d",
-        });
-        res.status(200).send({
-            success: true,
-            message: "Login successful",
-            token,
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                phone: user.phone
-            },
-        });
+    const { email, password } = req.body;
 
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "Error in login",
-            error,
-        });
+    // Validation
+    if (!email || !password) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid email or password",
+      });
     }
-}
-  
 
+    // Check if user exists
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
 
+    // Check password match
+    const match = await comparePassword(password, user.password);
+    if (!match) {
+      return res.status(401).send({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    // Generate JWT token
+    const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    // Send response
+    res.status(200).send({
+      success: true,
+      message: "Login successful",
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+      },
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Error in login",
+      error,
+    });
+  }
+};
+
+// Example protected route
 export const testController = (req, res) => {
-    res.send("Protected Route");
-}
-
+  res.send("Protected Route");
+};
 
 

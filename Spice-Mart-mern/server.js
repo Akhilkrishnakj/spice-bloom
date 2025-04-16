@@ -6,6 +6,7 @@ import connectDB from './config/db.js';
 import authRoute from './routes/authRoute.js';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import categoryRoute from './routes/categoryRoutes.js';
 
 
 //configure dotenv
@@ -24,6 +25,7 @@ app.use(cors());
 
 //routes
 app.use('/api/v1/auth', authRoute);
+app.use('/api/v1/category', categoryRoute);
 
 app.get('/', (req, res) => {
   res.send('<h1>Welcome to SpiceMart Website</h1>');

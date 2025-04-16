@@ -17,7 +17,10 @@ import AuthSuccess from './pages/AuthSuccess';
 import Profile from './pages/Profile';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import PrivateRoute from './components/PrivateRoute';
+import PrivateRoute from './components/Routes/PrivateRoute';
+import Dashboard from './pages/Admin/Dashboard';
+import Products from './pages/Admin/Products';
+import ProtectiveRoute from './components/Routes/AdminRoute';
 
 function App() {
   return (
@@ -45,6 +48,18 @@ function App() {
           <Route path="/cart" element={<Cart />} />
         </Route>
 
+        {/* Admin section */}
+            
+            <Route element={<ProtectiveRoute/>}>
+
+
+            </Route>
+
+            <Route path='/admin/dashboard' element={<Dashboard/>}/>
+            <Route path='/admin/products' element={<Products/>}/>
+
+
+        
       </Routes>
       <ToastContainer />
     </AuthProvider>
