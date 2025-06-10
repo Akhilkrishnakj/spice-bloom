@@ -3,19 +3,19 @@ import Layout from '../components/Layouts/Layout';
 import { FaTrash, FaShoppingCart, FaHeart } from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
 import { removeFromWishlist } from '../redux/wishlistSlice';
-// import { addToCart } from '../redux/cartSlice'; // Uncomment if you have cartSlice
+import { addToCart } from '../redux/cartSlice'; // Uncomment if you have cartSlice
 
 const Wishlist = () => {
   const dispatch = useDispatch();
-  const wishlistItems = useSelector(state => state.wishlist);
+  const wishlistItems = useSelector(state => state.wishlist.items);
 
   const removeItem = (id) => {
-    dispatch(removeFromWishlist({ id }));
+      dispatch(removeFromWishlist(id));
   };
 
   // Move to cart placeholder (requires cart slice)
   const moveToCart = (item) => {
-    // dispatch(addToCart(item)); // Uncomment if you have cart slice
+    dispatch(addToCart(item)); // Uncomment if you have cart slice
     removeItem(item.id);
     // Optionally add a toast notification here
   };
@@ -43,18 +43,18 @@ const Wishlist = () => {
                     <h3>{item.name}</h3>
                     <span className="category-tag">{item.category}</span>
                     <div className="item-price">₹{item.price.toLocaleString()}</div>
-                    {/* Assuming inStock info is part of your product */}
-                    {/* <div className="stock-status" data-in-stock={item.inStock}>
+                    {/* Assuming inStock info is part of your product *
+                    * <div className="stock-status" data-in-stock={item.inStock}>
                       {item.inStock ? 'In Stock' : 'Out of Stock'}
                     </div> */}
                   </div>
                   <div className="item-actions">
-                    {/* <button 
+                    <button 
                       className="move-to-cart-btn"
                       onClick={() => moveToCart(item)}
                     >
                       <FaShoppingCart /> Move to Cart
-                    </button> */}
+                    </button>
                     <button
                       className="remove-btn"
                       onClick={() => removeItem(item.id)}

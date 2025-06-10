@@ -24,46 +24,38 @@ import ProtectiveRoute from './components/Routes/AdminRoute';
 
 function App() {
   return (
-    <AuthProvider> {/* Wrap App with AuthProvider */}
+    <AuthProvider>
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/shop' element={<Shop />} />
         <Route path='/blogs' element={<Blog />} />
         <Route path='/contact' element={<Contact />} />
-        <Route path='*' element={<PageNotFound />} />
         <Route path='/signup' element={<Signup />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/about' element={<About />} />
         <Route path='/policy' element={<Policy />} />
-        {/* <Route path='/cart' element={<Cart />} /> */}
-        {/* <Route path='/wishlist' element={<Wishlist />} /> */}
         <Route path='/verify-otp' element={<VerifyOTP />} />
         <Route path='/success' element={<AuthSuccess />} />
-        {/* <Route path='/profile' element={<Profile />} /> */}
+        <Route path='*' element={<PageNotFound />} />
 
-           {/* Private Routes */}
-           <Route element={<PrivateRoute />}>
+        {/* Private Routes */}
+        <Route element={<PrivateRoute />}>
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/cart" element={<Cart />} />
         </Route>
 
-        {/* Admin section */}
-            
-            <Route element={<ProtectiveRoute/>}>
-
-
-            </Route>
-
-            <Route path='/admin/dashboard' element={<Dashboard/>}/>
-            <Route path='/admin/products' element={<Products/>}/>
-
-
-        
+        {/* Admin Protected Routes */}
+        <Route element={<ProtectiveRoute />}>
+          <Route path='/admin/dashboard' element={<Dashboard />} />
+          <Route path='/admin/products' element={<Products />} />
+        </Route>
       </Routes>
+
       <ToastContainer />
     </AuthProvider>
   );
 }
+
 
 export default App;

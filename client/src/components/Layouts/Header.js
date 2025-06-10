@@ -1,11 +1,26 @@
-import React from 'react';
+import React ,{useEffect,useState} from 'react';
 import { NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCartShopping,faHeart,faUser } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import './Header.css';
-
+import { useSelector } from 'react-redux';
 const Header = () => {
+
+    const cartItems = useSelector(state => state.cart);
+  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    if (totalItems > 0) {
+      setAnimate(true);
+      const timeout = setTimeout(() => setAnimate(false), 300); // animation duration
+      return () => clearTimeout(timeout);
+    }
+  }, [totalItems]);
+
+
   const { user } = useAuth();
   return (
     <>
@@ -51,10 +66,10 @@ const Header = () => {
 
 
           {/* Cart Icon */}
-             <NavLink to="/cart" className="me-4 my-auto cart-icon">
-                  <FontAwesomeIcon icon={faCartShopping} size="lg" />
-                  <span className="cart-count">3</span>
-             </NavLink>
+              <NavLink to="/cart" className="me-4 my-auto cart-icon">
+                 <FontAwesomeIcon icon={faCartShopping} size="lg" />
+                 <span className={`cart-count ${animate ? 'animate' : ''}`}>{totalItems}</span>
+               </NavLink>
 
              {
                   !user ? (

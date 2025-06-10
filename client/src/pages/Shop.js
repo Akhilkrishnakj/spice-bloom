@@ -3,10 +3,11 @@ import Layout from '../components/Layouts/Layout';
 import { FaSearch, FaHeart, FaShoppingCart } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToWishlist, removeFromWishlist } from '../redux/wishlistSlice';
+import { addToCart } from '../redux/cartSlice.js'; // ✅ Proper import for cart actions
 
 const Shop = () => {
   const dispatch = useDispatch();
-  const wishlist = useSelector(state => state.wishlist);
+  const wishlist = useSelector(state => state.wishlist.items);
 
   // Sample products data
   const products = [
@@ -56,6 +57,9 @@ const Shop = () => {
       // Optional: toast or alert for feedback
     }
   };
+
+  console.log('AddToCart:', addToCart);
+
 
   // Filter products
   const filteredProducts = products.filter(product => {
@@ -142,10 +146,14 @@ const Shop = () => {
                 <div className="price-container">
                   <span className="discounted-price">₹{product.price}/kg</span>
                 </div>
-                <button className="add-to-cart-btn">
-                  <FaShoppingCart className="cart-icon" />
-                  Add to Cart
-                </button>
+               <button
+                  className="add-to-cart-btn"
+                   onClick={() => dispatch(addToCart(product))} // ✅ Proper dispatch
+                   >
+                <FaShoppingCart className="cart-icon" />
+                 Add to Cart
+            </button>
+
               </div>
             </div>
           ))}
