@@ -5,7 +5,9 @@ import morgan from 'morgan';
 import connectDB from './config/db.js';
 import authRoute from './routes/authRoute.js';
 import cors from 'cors';
-import categoryRoute from './routes/categoryRoutes.js';
+import productRoute from './routes/productRoute.js';
+import adminRoute from './routes/adminRoute.js';
+ import categoryRoute from './routes/categoryRoute.js';
 
 // configure dotenv
 dotenv.config();
@@ -23,10 +25,13 @@ connectDB();
 // middlewares
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // ✅ Add this
 app.use(cors());
 
 // routes
 app.use('/api/v1/auth', authRoute);
+app.use('/api/v1/product', productRoute);
+app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/category', categoryRoute);
 
 app.get('/', (req, res) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect,useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome,
@@ -16,10 +16,24 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layouts/Layout';
 import './Admin.css';
+import axios from 'axios';
 
 const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();  // useNavigate hook to navigate programmatically
+
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    axios.get('http://localhost:8080/api/v1/admin/dashboard')
+      .then(res => setMessage(res.data.message))
+      .catch(err => {
+        console.error(err);
+        setMessage("Error loading dashboard");
+      });
+  }, []);
+     
+  console.log('resndering dashboard.....!')
 
   const stats = [
     { title: 'Total Users', value: '1,234', icon: faUsers, trend: '+12.5%', color: 'blue' },

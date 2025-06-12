@@ -20,12 +20,16 @@ import 'react-toastify/dist/ReactToastify.css';
 import PrivateRoute from './components/Routes/PrivateRoute';
 import Dashboard from './pages/Admin/Dashboard';
 import Products from './pages/Admin/Products';
-import ProtectiveRoute from './components/Routes/AdminRoute';
+import ProtectiveRoute from './components/Routes/ProtectiveRoute';
+import TestAdmin from './pages/test-page';
 
 function App() {
   return (
+    
     <AuthProvider>
       <Routes>
+
+        <Route path="/test-admin" element={<TestAdmin />} />
         <Route path='/' element={<Home />} />
         <Route path='/shop' element={<Shop />} />
         <Route path='/blogs' element={<Blog />} />
@@ -49,7 +53,9 @@ function App() {
         <Route element={<ProtectiveRoute />}>
           <Route path='/admin/dashboard' element={<Dashboard />} />
           <Route path='/admin/products' element={<Products />} />
+
         </Route>
+
       </Routes>
 
       <ToastContainer />

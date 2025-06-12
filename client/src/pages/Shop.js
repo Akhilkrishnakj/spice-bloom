@@ -1,85 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layouts/Layout';
 import { FaSearch, FaHeart, FaShoppingCart } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToWishlist, removeFromWishlist } from '../redux/wishlistSlice';
-import { addToCart } from '../redux/cartSlice.js'; // ✅ Proper import for cart actions
+import { addToCart } from '../redux/cartSlice.js';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const Shop = () => {
   const dispatch = useDispatch();
   const wishlist = useSelector(state => state.wishlist.items);
+  const cart = useSelector(state => state.cart);
 
-  // Sample products data
-  const products = [
-    {
-      id: 1,
-      name: "Black Pepper",
-      category: "spices",
-      description: "High-quality black peppercorns, freshly packed for maximum flavor and aroma.",
-      img: "https://t4.ftcdn.net/jpg/02/19/80/25/240_F_219802520_B44vVhPgrLverIyepL72hsXDkE0PYNea.jpg",
-      price: 899,
-      rating: 4.5
-    },
-    {
-      id: 2,
-      name: "Cardamom",
-      category: "spices",
-      description: "Green cardamom pods, carefully selected for their sweet and aromatic flavor.",
-      img: "https://t4.ftcdn.net/jpg/01/17/91/01/240_F_117910199_2F3WkIIx1HlJM0lhhiUxUfGN1lXegc6Z.jpg",
-      price: 2999,
-      rating: 4.8
-    },
-    {
-      id: 3,
-      name: "Garam Masala Blend",
-      category: "blends",
-      description: "Perfect blend of aromatic spices for Indian cuisine.",
-      img: "https://t3.ftcdn.net/jpg/06/12/05/86/240_F_612058696_D2Y6UNKBm1YKZCmCTTQVE3c3EjBD5FF5.jpg",
-      price: 399,
-      rating: 4.3
-    }
-  ];
-
+  const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name');
 
-  // Check if product is already in wishlist
-  const isInWishlist = (productId) => wishlist.some(item => item.id === productId);
-
-  // Toggle wishlist add/remove
-  const handleWishlistClick = (product) => {
-    if (isInWishlist(product.id)) {
-      dispatch(removeFromWishlist({ id: product.id }));
-      // Optional: toast or alert for feedback
-    } else {
-      dispatch(addToWishlist(product));
-      // Optional: toast or alert for feedback
+  // ✅ Fetch products from backend
+  const getAllProducts = async () => {
+    try {
+      const { data } = await axios.get('/api/v1/product/get-product');
+      if (data.success) {
+        setProducts(data.products);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
     }
   };
 
-  console.log('AddToCart:', addToCart);
+  useEffect(() => {
+    getAllProducts();
+  }, []);
 
+  const isInWishlist = (productId) => wishlist.some(item => item._id === productId);
 
-  // Filter products
+  const handleWishlistClick = (product) => {
+    if (isInWishlist(product._id)) {
+      dispatch(removeFromWishlist({ id: product._id }));
+    } else {
+      dispatch(addToWishlist(product));
+    }
+  };
+
+  const handleAddToCart = (product) => {
+    const existingItem = cart.find(item => item._id === product._id);
+    if (existingItem && existingItem.quantity >= 10) {
+      toast.warn("Maximum 10 items allowed in cart!");
+    } else {
+      dispatch(addToCart(product));
+      toast.success("Item added to cart!");
+    }
+  };
+
+  // 🔎 Filter
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || product.category?.name === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  // Sort products
+  // 🔀 Sort
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sortBy === 'price-low') return a.price - b.price;
     if (sortBy === 'price-high') return b.price - a.price;
-    if (sortBy === 'rating') return b.rating - a.rating;
+    if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
     return a.name.localeCompare(b.name);
   });
 
   return (
     <Layout title={"Shop - Spice Bloom"}>
       <div className="shop-container">
-        {/* Filter Section */}
+        {/* 🔍 Filter Section */}
         <div className="filter-section">
           <div className="search-box">
             <FaSearch className="search-icon" />
@@ -94,24 +86,9 @@ const Shop = () => {
           <div className="category-filter">
             <h3>Categories</h3>
             <div className="category-buttons">
-              <button
-                className={selectedCategory === 'all' ? 'active' : ''}
-                onClick={() => setSelectedCategory('all')}
-              >
-                All Categories
-              </button>
-              <button
-                className={selectedCategory === 'spices' ? 'active' : ''}
-                onClick={() => setSelectedCategory('spices')}
-              >
-                Spices
-              </button>
-              <button
-                className={selectedCategory === 'blends' ? 'active' : ''}
-                onClick={() => setSelectedCategory('blends')}
-              >
-                Blends
-              </button>
+              <button onClick={() => setSelectedCategory('all')} className={selectedCategory === 'all' ? 'active' : ''}>All</button>
+              <button onClick={() => setSelectedCategory('spices')} className={selectedCategory === 'spices' ? 'active' : ''}>Spices</button>
+              <button onClick={() => setSelectedCategory('blends')} className={selectedCategory === 'blends' ? 'active' : ''}>Blends</button>
             </div>
           </div>
 
@@ -126,19 +103,18 @@ const Shop = () => {
           </div>
         </div>
 
-        {/* Products Grid */}
+        {/* 🛒 Products Grid */}
         <div className="shop-products-grid">
           {sortedProducts.map(product => (
-            <div key={product.id} className="product-card">
+            <div key={product._id} className="product-card">
               <div className="product-image-container">
-                <span className="category-tag">{product.category === 'spices' ? 'SP' : 'BL'}</span>
-                <button
-                  className="wishlist-btn"
-                  onClick={() => handleWishlistClick(product)}
-                >
-                  <FaHeart color={isInWishlist(product.id) ? 'red' : 'grey'} />
+                <span className="category-tag">
+                  {product.category?.name?.toLowerCase().includes('spice') ? 'SP' : 'BL'}
+                </span>
+                <button className="wishlist-btn" onClick={() => handleWishlistClick(product)}>
+                  <FaHeart color={isInWishlist(product._id) ? 'red' : 'grey'} />
                 </button>
-                <img src={product.img} alt={product.name} className="product-image" />
+                <img src={product.images?.[0]} alt={product.name} className="product-image" />
               </div>
               <div className="product-info">
                 <h4 className="product-name">{product.name}</h4>
@@ -146,14 +122,10 @@ const Shop = () => {
                 <div className="price-container">
                   <span className="discounted-price">₹{product.price}/kg</span>
                 </div>
-               <button
-                  className="add-to-cart-btn"
-                   onClick={() => dispatch(addToCart(product))} // ✅ Proper dispatch
-                   >
-                <FaShoppingCart className="cart-icon" />
-                 Add to Cart
-            </button>
-
+                <button className="add-to-cart-btn" onClick={() => handleAddToCart(product)}>
+                  <FaShoppingCart className="cart-icon" />
+                  Add to Cart
+                </button>
               </div>
             </div>
           ))}
