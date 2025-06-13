@@ -22,6 +22,9 @@ import Dashboard from './pages/Admin/Dashboard';
 import Products from './pages/Admin/Products';
 import ProtectiveRoute from './components/Routes/ProtectiveRoute';
 import TestAdmin from './pages/test-page';
+import ProductManagement from './pages/Admin/ProductManagement';
+import Orders from './pages/Admin/Orders';
+import './App.css'; 
 
 function App() {
   return (
@@ -29,7 +32,6 @@ function App() {
     <AuthProvider>
       <Routes>
 
-        <Route path="/test-admin" element={<TestAdmin />} />
         <Route path='/' element={<Home />} />
         <Route path='/shop' element={<Shop />} />
         <Route path='/blogs' element={<Blog />} />
@@ -53,6 +55,9 @@ function App() {
         <Route element={<ProtectiveRoute />}>
           <Route path='/admin/dashboard' element={<Dashboard />} />
           <Route path='/admin/products' element={<Products />} />
+          <Route path="/test-admin" element={<TestAdmin />} />
+          <Route path='/admin/products-manage' element={<ProductManagement />} />
+          <Route path='/admin/orders' element={<Orders />} />
 
         </Route>
 

@@ -28,6 +28,7 @@
     "formidable": "^3.5.4",
     "framer-motion": "^12.6.3",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.515.0",
     "mongoose": "^8.13.2",
     "moongoose": "^0.0.5",
     "morgan": "^1.10.0",

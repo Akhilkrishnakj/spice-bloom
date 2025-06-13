@@ -19,6 +19,9 @@ import './Admin.css';
 import axios from 'axios';
 
 const Dashboard = () => {
+
+    console.log('rendering dashboard.....!');
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();  // useNavigate hook to navigate programmatically
 
@@ -32,8 +35,7 @@ const Dashboard = () => {
         setMessage("Error loading dashboard");
       });
   }, []);
-     
-  console.log('resndering dashboard.....!')
+
 
   const stats = [
     { title: 'Total Users', value: '1,234', icon: faUsers, trend: '+12.5%', color: 'blue' },
@@ -59,7 +61,7 @@ const Dashboard = () => {
   ];
 
   const goToProducts = () => {
-    navigate('/admin/products');  // Navigate to the Products page programmatically
+    navigate('/admin/products-manage');  // Navigate to the Products page programmatically
   };
 
   return (

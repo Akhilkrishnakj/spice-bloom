@@ -54,3 +54,55 @@ export const getAllProductsController = async (req, res) => {
     });
   }
 };
+
+// update product controller
+
+export const updateProductController = async (req, res) => {
+  try {
+    const { name, description, price, category, quantity } = req.body;
+
+    const updateData = {
+      name,
+      description,
+      price,
+      category,
+      quantity,
+    };
+
+    if (req.files && req.files.length > 0) {
+      const imageUrls = req.files.map(file => file.path);
+      updateData.images = imageUrls;
+    }
+
+    const product = await productModel.findByIdAndUpdate(req.params.id, updateData, { new: true });
+
+    res.status(200).send({
+      success: true,
+      message: "Product updated successfully",
+      product,
+    });
+  } catch (err) {
+    res.status(500).send({
+      success: false,
+      message: "Error updating product",
+      error: err.message,
+    });
+  }
+};
+
+// delete product controller
+export const deleteProductController = async (req, res) => {
+  try {
+    await productModel.findByIdAndDelete(req.params.id);
+    res.status(200).send({
+      success: true,
+      message: "Product deleted successfully",
+    });
+  } catch (err) {
+    res.status(500).send({
+      success: false,
+      message: "Error deleting product",
+      error: err.message,
+    });
+  }
+};
