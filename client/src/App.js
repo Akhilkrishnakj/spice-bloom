@@ -24,7 +24,8 @@ import ProtectiveRoute from './components/Routes/ProtectiveRoute';
 import TestAdmin from './pages/test-page';
 import ProductManagement from './pages/Admin/ProductManagement';
 import Orders from './pages/Admin/Orders';
-import './App.css'; 
+import './'; // Import your global styles
+import UserManagement from './pages/Admin/UserManagement';
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
           <Route path="/test-admin" element={<TestAdmin />} />
           <Route path='/admin/products-manage' element={<ProductManagement />} />
           <Route path='/admin/orders' element={<Orders />} />
+          <Route path='/admin/users' element={<UserManagement />} />
 
         </Route>
 

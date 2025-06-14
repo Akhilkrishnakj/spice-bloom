@@ -7,7 +7,8 @@ import authRoute from './routes/authRoute.js';
 import cors from 'cors';
 import productRoute from './routes/productRoute.js';
 import adminRoute from './routes/adminRoute.js';
- import categoryRoute from './routes/categoryRoute.js';
+import categoryRoute from './routes/categoryRoute.js';
+import userRoutes from './routes/userRoutes.js';
 
 // configure dotenv
 dotenv.config();
@@ -33,6 +34,7 @@ app.use('/api/v1/auth', authRoute);
 app.use('/api/v1/product', productRoute);
 app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/category', categoryRoute);
+app.use('/api/v1/user', userRoutes);
 
 app.get('/', (req, res) => {
   res.send('<h1>Welcome to SpiceMart Website</h1>');
