@@ -26,6 +26,7 @@ import ProductManagement from './pages/Admin/ProductManagement';
 import Orders from './pages/Admin/Orders';
 import './'; // Import your global styles
 import UserManagement from './pages/Admin/UserManagement';
+import OfferManagement from './pages/Admin/Offers';
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
           <Route path='/admin/products-manage' element={<ProductManagement />} />
           <Route path='/admin/orders' element={<Orders />} />
           <Route path='/admin/users' element={<UserManagement />} />
+          <Route path='/admin/offers' element={<OfferManagement/>}/>
 
         </Route>
 
