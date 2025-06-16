@@ -24,9 +24,9 @@ import ProtectiveRoute from './components/Routes/ProtectiveRoute';
 import TestAdmin from './pages/test-page';
 import ProductManagement from './pages/Admin/ProductManagement';
 import Orders from './pages/Admin/Orders';
-import './'; // Import your global styles
 import UserManagement from './pages/Admin/UserManagement';
 import OfferManagement from './pages/Admin/Offers';
+import ProductDetail from './pages/ProductDetails/ProductDetail';
 
 function App() {
   return (
@@ -45,6 +45,7 @@ function App() {
         <Route path='/verify-otp' element={<VerifyOTP />} />
         <Route path='/success' element={<AuthSuccess />} />
         <Route path='*' element={<PageNotFound />} />
+        <Route path='/products/:id' element={<ProductDetail />} />
 
         {/* Private Routes */}
         <Route element={<PrivateRoute />}>

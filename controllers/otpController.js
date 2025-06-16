@@ -47,7 +47,7 @@ export const sendOTP = async (req, res) => {
     console.log("PASSWORD:", process.env.NODEMAILER_PASSWORD);
 
   }
-};
+};import JWT from "jsonwebtoken";
 
 export const verifyOTP = async (req, res) => {
   const { name, email, phone, otp, password } = req.body;
@@ -56,21 +56,24 @@ export const verifyOTP = async (req, res) => {
   console.log({ name, email, phone, otp, password });
 
   try {
-    const otpEntry = await Otp.findOne({ email: email.trim(), otp: otp.toString().trim()   });
+    const otpEntry = await Otp.findOne({
+      email: email.trim(),
+      otp: otp.toString().trim()
+    });
 
     console.log("🔍 OTP entry found in DB:", otpEntry);
-
 
     if (!otpEntry) {
       return res.status(400).json({ success: false, message: "Invalid OTP" });
     }
 
-    // ✅ Save user to DB here
+    // ✅ Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ success: false, message: "User already exists" });
     }
-    
+
+    // ✅ Hash password and save user
     const hashedPassword = await hashPassword(password);
     const newUser = new User({
       name,
@@ -81,11 +84,30 @@ export const verifyOTP = async (req, res) => {
 
     await newUser.save();
 
-    
+    // ✅ Generate token
+    const token = JWT.sign(
+      { _id: newUser._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
+    // ✅ Clean up OTP
     await Otp.deleteMany({ email });
 
-    res.json({ success: true, message: "User created and verified successfully" });
+    // ✅ Send token + user
+    res.json({
+      success: true,
+      message: "User created and verified successfully",
+      token,
+      user: {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        phone: newUser.phone,
+        role: newUser.role
+      }
+    });
+
   } catch (error) {
     console.error("Verify OTP error:", error);
     res.status(500).json({ success: false, message: "Failed to verify OTP" });

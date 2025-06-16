@@ -4,6 +4,7 @@ import {
   Bell, TrendingUp, Calendar, DollarSign, MoreHorizontal, Eye,
   Filter, Download, ChevronRight, Activity, ArrowUpRight, Settings
 } from 'lucide-react';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 // Custom gradient text component
 const GradientText = ({ children, from, to }) => (
@@ -44,6 +45,17 @@ const sidebarLinks = [
       case 'processing': return 'bg-blue-100 text-blue-800 border-blue-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear localStorage/sessionStorage
+    localStorage.removeItem('token'); // or your token key
+    // Any other cleanup (e.g. user data)
+    
+    // Redirect to login or home
+    navigate('/login');  // or navigate('/')
   };
 
   return (
@@ -102,7 +114,7 @@ const sidebarLinks = [
           ))}
         </nav>
         <div className="p-4 border-t border-gray-100 bg-white">
-          <button className="flex items-center w-full p-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-lg transition-colors duration-200">
+          <button className="flex items-center w-full p-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-lg transition-colors duration-200" onClick={() => handleLogout()}>
             <LogOut className="w-4 h-4 mr-2" />
             <span>Logout</span>
           </button>
