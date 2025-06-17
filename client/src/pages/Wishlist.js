@@ -41,7 +41,7 @@ const Wishlist = () => {
                   </div>
                   <div className="item-details">
                     <h3>{item.name}</h3>
-                    <span className="category-tag">{item.category}</span>
+                    <span className="category-tag">{item.category?.name || "No category"}</span>
                     <div className="item-price">₹{item.price.toLocaleString()}</div>
                     {/* Assuming inStock info is part of your product *
                     * <div className="stock-status" data-in-stock={item.inStock}>

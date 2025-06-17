@@ -35,23 +35,33 @@ const Shop = () => {
     getAllProducts();
   }, []);
 
-  const isInWishlist = (productId) => wishlist.some(item => item._id === productId);
+  const isInWishlist = (productId) => wishlist.some(item => item.id === productId);
 
-  const handleWishlistClick = (product) => {
-    if (isInWishlist(product._id)) {
-      dispatch(removeFromWishlist({ id: product._id }));
-    } else {
-      dispatch(addToWishlist(product));
-    }
-  };
+const handleWishlistClick = (normalized) => {
+  if (isInWishlist(normalized.id)) {
+    dispatch(removeFromWishlist({ id: normalized.id }));
+  } else {
+    dispatch(addToWishlist({
+      id: normalized.id,
+      name: normalized.name,
+      img: normalized.image,     // ✅ correctly map
+      price: normalized.price,
+      category: normalized.category
+    }));
+  }
+};
 
   const handleAddToCart = (product) => {
     const existingItem = cart.find(item => item._id === product._id);
     if (existingItem && existingItem.quantity >= 10) {
       toast.warn("Maximum 10 items allowed in cart!");
     } else {
-      dispatch(addToCart(product));
-      toast.success("Item added to cart!");
+      dispatch(addToCart({
+      ...product,
+      img: product.images?.[0] || "/default-placeholder.jpg", 
+      id: product._id || product.id // ✅ ensure id is consistent
+    }));
+    toast.success("Item added to cart!");
     }
   };
 
@@ -183,7 +193,7 @@ const Shop = () => {
                     className="group bg-white rounded-3xl shadow-xl border border-green-100 overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:border-green-200"
                   >
                     <div className="relative overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50">
-                      <Link to={`/product/${product._id}`}>
+                      <Link to={`/products/${product._id}`}>
                         <div className="absolute top-4 left-4 z-10">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${
                             product.category?.name?.toLowerCase().includes('spice') 
@@ -257,7 +267,11 @@ const Shop = () => {
                       </div>
 
                       <button
-                        onClick={() => handleAddToCart(product)}
+                        onClick={() => handleAddToCart({ id: product._id,
+    name: product.name,
+    img: product.images?.[0],  
+    price: product.price,
+    category: product.category?.name})}
                         className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-6 rounded-2xl font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:from-green-600 hover:to-emerald-600 flex items-center justify-center gap-2 group"
                       >
                         <FaShoppingCart className="transition-transform duration-300 group-hover:scale-110" />

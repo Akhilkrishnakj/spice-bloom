@@ -14,6 +14,10 @@ import {
 import Header from '../components/Layouts/Header';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { addToWishlist, removeFromWishlist } from '../redux/wishlistSlice.js';
+import { addToCart } from '../redux/cartSlice.js';
+import { useDispatch, useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -22,11 +26,17 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
+  const dispatch = useDispatch();
+  const wishlist = useSelector(state => state.wishlist.items);
+  const cart = useSelector(state => state.cart);
+
   console.log('Featured produdcvzxcts:', products);
 
 
   useEffect(() => {
     const fetchProducts = async () => {
+ 
       try {
         setLoading(true);
         setError(null);
@@ -69,6 +79,46 @@ function App() {
     fetchProducts();
   }, []);
 
+
+    const isInWishlist = (productId) => wishlist.some(item => item._id === productId);
+  
+const handleWishlistClick = (normalized) => {
+  if (isInWishlist(normalized.id)) {
+    dispatch(removeFromWishlist({ id: normalized.id }));
+  } else {
+    dispatch(addToWishlist({
+      id: normalized.id,
+      name: normalized.name,
+      img: normalized.image,     // ✅ correctly map
+      price: normalized.price,
+      category: normalized.category
+    }));
+  }
+};
+
+
+  
+const handleAddToCart = (product) => {
+  const existingItem = cart.find(item => item.id === (product._id || product.id));
+
+  if (existingItem && existingItem.quantity >= 10) {
+    toast.warn("Maximum 10 items allowed in cart!");
+  } else {
+    dispatch(addToCart({
+      ...product,
+      id: product._id || product.id, // Consistent ID key in cart
+      img: 
+        product.image ||                    // ✅ Already normalized image field (Home)
+        product.images?.[0] ||              // ✅ First image (Shop)
+        'https://via.placeholder.com/300x300?text=No+Image' // ✅ Fallback
+    }));
+    toast.success("Item added to cart!");
+  }
+};
+
+
+ 
+
   const bannerSlides = [
     {
       image: 'https://media.istockphoto.com/id/1227198304/photo/colourful-background-from-various-herbs-and-spices-for-cooking-in-bowls.jpg?s=612x612&w=0&k=20&c=OtzOlSOjQ0a9giYM0FKyRJqIsIvWguEZv9pCzjKs5vo=',
@@ -93,13 +143,13 @@ function App() {
   const categories = [
     {
       name: 'Pure Spices',
-      image: 'https://images.pexels.com/photos/1340116/pexels-photo-1340116.jpeg?auto=compress&cs=tinysrgb&w=800',
+      image: 'https://media.istockphoto.com/id/1298434383/photo/jars-of-spices.jpg?s=612x612&w=0&k=20&c=2V-j2xYYDJdq8z_eCHhIkZc1q2dL9mghvYQM_W0-X-c=',
       description: 'Single-origin whole and ground spices',
       products: '50+ varieties'
     },
     {
       name: 'Spice Blends',
-      image: 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg?auto=compress&cs=tinysrgb&w=800',
+      image: 'https://media.istockphoto.com/id/1152404169/photo/set-of-spices-top-view.jpg?s=612x612&w=0&k=20&c=AwMgJn5ckM_GuYmBX6U0YguGIUFG0kELoXq_Eg4mJ9k=',
       description: 'Expertly crafted spice combinations',
       products: '25+ blends'
     }
@@ -178,15 +228,15 @@ function App() {
     setCurrentSlide((prev) => (prev - 1 + bannerSlides.length) % bannerSlides.length);
   };
 
-  const addToWishlist = (product) => {
-    console.log('Added to wishlist:', product.name);
-    // Add your wishlist logic here
-  };
+  // const addToWishlist = (product) => {
+  //   console.log('Added to wishlist:', product.name);
+  //   // Add your wishlist logic here
+  // };
 
-  const addToCart = (product) => {
-    console.log('Added to cart:', product.name);
-    // Add your cart logic here
-  };
+  // const addToCart = (product) => {
+  //   console.log('Added to cart:', product.name);
+  //   // Add your cart logic here
+  // };
 
   const handleSearch = (e) => {
     if (e.preventDefault) e.preventDefault();
@@ -403,7 +453,7 @@ function App() {
                     key={normalized.id}
                     className="relative bg-white rounded-2xl shadow-lg overflow-hidden group hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
                   >      
-                    <Link to={`/product/${normalized.id}`}>
+                    <Link to={`/products/${normalized.id}`}>
                       <div className="relative">
                         <img
                           src={normalized.image}
@@ -472,7 +522,7 @@ function App() {
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          addToCart(normalized);
+                          handleAddToCart(normalized);
                         }}
                         className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-6 rounded-full font-semibold transition-all duration-300 flex items-center justify-center space-x-2 group/cart"
                       >
@@ -484,7 +534,7 @@ function App() {
                     <button
                       onClick={(e) => {
                         e.preventDefault();
-                        addToWishlist(normalized);
+                        handleWishlistClick(normalized);
                       }}
                       className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full transition-colors group/heart"
                     >

@@ -29,18 +29,23 @@ const Cart = () => {
               {cartItems.map(item => (
                 <div key={item.id} className="cart-item">
                   <div className="item-image">
-                    <img src={item.img} alt={item.name} />
+                   <img 
+  src={item.img}
+  alt={item.name}
+  onError={(e) => { e.target.src = '/default-placeholder.jpg'; }}
+/>
+
                   </div>
                   <div className="item-details">
                     <h3>{item.name}</h3>
-                    <span className="category-tag">{item.category}</span>
+                    <span className="category-tag">{item.category?.name || 'No Category'}</span>
                   </div>
                   <div className="quantity-controls">
                     <button onClick={() => dispatch(decreaseQuantity({ id: item.id }))}>
                       <FaMinus />
                     </button>
                     <span>{item.quantity}</span>
-                    <button onClick={() => dispatch(addToCart(item))}>
+                    <button onClick={() => dispatch(addToCart(item))} disabled={item.quantity >= 10}>
                       <FaPlus />
                     </button>
                   </div>

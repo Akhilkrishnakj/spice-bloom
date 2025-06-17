@@ -14,12 +14,15 @@ import {
   faCog, 
   faSignOutAlt 
 } from '@fortawesome/free-solid-svg-icons';
+import { clearCart } from '../redux/cartSlice';
+import { useDispatch } from 'react-redux';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
 
   const {logout} =  useAuth();
+  const dispatch = useDispatch();
   
   const [userInfo, setUserInfo] = useState({
     name: 'John Doe',
@@ -41,6 +44,7 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
+    dispatch(clearCart());
     logout();
     window.location.href = '/login';
   };

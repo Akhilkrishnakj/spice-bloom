@@ -1,106 +1,66 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Star, ShoppingCart, Heart, Truck, Shield, Award, Minus, Plus } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import { Star, ShoppingCart, Heart, Truck, Shield, Award, Minus, Plus, ArrowLeft } from 'lucide-react';
+import Layout from '../../components/Layouts/Layout';
 import ImageZoom from './ImageZoom';
 import ReviewSection from './ReviewSection';
 import RelatedProducts from './RelatedProducts';
 import ShareProduct from './ShareProduct';
+import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart } from '../../redux/cartSlice';
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
+   
+  const cart = useSelector((state) => state.cart?.items || []);
+  console.log("Cart state:", cart);
 
+
+  const dispatch = useDispatch();
   useEffect(() => {
-    const mockProduct = {
-      id: '1',
-      name: 'Premium Organic Turmeric Powder',
-      price: 299,
-      originalPrice: 399,
-      description:
-        'Premium quality organic turmeric powder sourced directly from the finest farms. Our turmeric is carefully processed to retain maximum curcumin content and authentic flavor. Perfect for cooking, health drinks, and traditional remedies.',
-      images: [
-        'https://images.pexels.com/photos/4198021/pexels-photo-4198021.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4198020/pexels-photo-4198020.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4198019/pexels-photo-4198019.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4198018/pexels-photo-4198018.jpeg?auto=compress&cs=tinysrgb&w=800',
-      ],
-      rating: 4.5,
-      reviewCount: 128,
-      inStock: true,
-      category: 'Spices',
-      weight: '500g',
-      origin: 'Kerala, India',
-      benefits: [
-        'Rich in curcumin with anti-inflammatory properties',
-        'Boosts immunity naturally',
-        'Supports digestive health',
-        'Pure and organic, no additives',
-      ],
+    const fetchProduct = async () => {
+      try {
+        const { data } = await axios.get(`/api/v1/product/get-product/${id}`);
+        if (data.success) {
+          setProduct(data.product);
+          setReviews(data.product.reviews || []);
+        } else {
+          console.error("Product not found");
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      }
     };
-
-    const mockReviews = [
-      {
-        id: '1',
-        userId: '1',
-        userName: 'Priya Sharma',
-        rating: 5,
-        comment: 'Excellent quality turmeric! The color and aroma are amazing. Very satisfied with the purchase.',
-        date: '2 days ago',
-        likes: 12,
-      },
-      {
-        id: '2',
-        userId: '2',
-        userName: 'Rajesh Kumar',
-        rating: 4,
-        comment: 'Good quality product. Fast delivery and proper packaging. Will order again.',
-        date: '1 week ago',
-        likes: 8,
-      },
-    ];
-
-    setProduct(mockProduct);
-    setReviews(mockReviews);
+    fetchProduct();
   }, [id]);
 
-  const relatedProducts = [
-    {
-      id: '2',
-      name: 'Organic Red Chili Powder',
-      price: 199,
-      image: 'https://images.pexels.com/photos/4198022/pexels-photo-4198022.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.3,
-      reviewCount: 85,
-    },
-    {
-      id: '3',
-      name: 'Pure Garam Masala',
-      price: 249,
-      image: 'https://images.pexels.com/photos/4198023/pexels-photo-4198023.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.6,
-      reviewCount: 102,
-    },
-    {
-      id: '4',
-      name: 'Organic Coriander Seeds',
-      price: 179,
-      image: 'https://images.pexels.com/photos/4198024/pexels-photo-4198024.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.4,
-      reviewCount: 67,
-    },
-    {
-      id: '5',
-      name: 'Premium Cardamom',
-      price: 599,
-      image: 'https://images.pexels.com/photos/4198025/pexels-photo-4198025.jpeg?auto=compress&cs=tinysrgb&w=400',
-      rating: 4.8,
-      reviewCount: 156,
-    },
-  ];
+  useEffect(() => {
+    const fetchRelated = async () => {
+      if (product?.category?._id) {
+        try {
+          const { data } = await axios.get(`/api/v1/product/related/${product.category._id}`);
+          if (data.success) {
+            setRelatedProducts(data.products);
+          }
+        } catch (error) {
+          console.error("Error fetching related products:", error);
+        }
+      }
+    };
+    fetchRelated();
+  }, [product?.category?._id]);
 
   const handleAddReview = (review) => {
     const newReview = {
@@ -113,200 +73,307 @@ const ProductDetail = () => {
   };
 
   const handleEditReview = (reviewId, updatedReview) => {
-    setReviews(reviews.map((review) => (review.id === reviewId ? { ...review, ...updatedReview } : review)));
+    setReviews(reviews.map((r) => (r.id === reviewId ? { ...r, ...updatedReview } : r)));
   };
 
   const handleDeleteReview = (reviewId) => {
-    setReviews(reviews.filter((review) => review.id !== reviewId));
+    setReviews(reviews.filter((r) => r.id !== reviewId));
   };
+ 
+const handleAddToCart = (product) => {
+  if (!product || !product._id) {
+    console.error("Invalid product:", product);
+    return;  // Stop the function early
+  }
+
+  const existingItem = cart.find(item => item._id === product._id);
+  
+  if (existingItem && existingItem.quantity >= 10) {
+    toast.warn("Maximum 10 items allowed in cart!");
+  } else {
+    dispatch(addToCart({
+      ...product,
+      img: product.images?.[0] || "/default-placeholder.jpg",
+      id: product._id || product.id
+    }));
+    toast.success("Item added to cart!");
+  }
+};
+
+
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-      </div>
+      <Layout>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-600 border-t-transparent mx-auto mb-4"></div>
+            <p className="text-gray-600 text-lg">Loading product details...</p>
+          </div>
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <nav className="text-sm text-gray-500 mb-8">
-          <span>Home</span> / <span>Spices</span> / <span className="text-gray-900">{product.name}</span>
-        </nav>
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+          {/* Back Button - Mobile */}
+          <button 
+            onClick={() => navigate(-1)}
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-4 sm:mb-6 lg:hidden transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Back</span>
+          </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-          <div>
-            <ImageZoom images={product.images} productName={product.name} />
-          </div>
+          {/* Breadcrumb - Hidden on mobile */}
+          <nav className="text-sm text-gray-500 mb-6 sm:mb-8 hidden sm:block">
+            <div className="flex items-center space-x-2 flex-wrap">
+              <span className="hover:text-gray-700 cursor-pointer">Home</span>
+              <span>/</span>
+              <span className="hover:text-gray-700 cursor-pointer">{product.category?.name}</span>
+              <span>/</span>
+              <span className="text-gray-900 font-medium truncate max-w-xs">{product.name}</span>
+            </div>
+          </nav>
 
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">{product.name}</h1>
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${
-                        i < Math.floor(product.rating)
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-lg text-gray-600">
-                  {product.rating} ({product.reviewCount} reviews)
-                </span>
+          {/* Main Product Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 mb-12 lg:mb-16">
+            {/* Product Images */}
+            <div className="lg:col-span-6">
+              <div className="sticky top-4">
+                <ImageZoom images={product.images || []} productName={product.name} />
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <span className="text-4xl font-bold text-green-600">₹{product.price}</span>
-              {product.originalPrice && (
-                <>
-                  <span className="text-2xl text-gray-500 line-through">₹{product.originalPrice}</span>
-                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+            {/* Product Details */}
+            <div className="lg:col-span-6 space-y-6 lg:space-y-8">
+              {/* Product Title & Rating */}
+              <div className="space-y-4">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+                  {product.name}
+                </h1>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
+                  <div className="flex items-center space-x-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                          i < Math.floor(product.rating || 0) 
+                            ? 'fill-yellow-400 text-yellow-400' 
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm sm:text-base text-gray-600">
+                    {Number(product.rating || 0).toFixed(1)} ({product.reviewCount || reviews.length} reviews)
                   </span>
-                </>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-white p-4 rounded-lg border border-gray-100">
-                <span className="text-gray-500">Weight:</span>
-                <span className="font-medium ml-2">{product.weight}</span>
+                </div>
               </div>
-              <div className="bg-white p-4 rounded-lg border border-gray-100">
-                <span className="text-gray-500">Origin:</span>
-                <span className="font-medium ml-2">{product.origin}</span>
-              </div>
-            </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-3">
-                  <span className="text-gray-700 font-medium">Quantity:</span>
-                  <div className="flex items-center bg-white border border-gray-300 rounded-lg">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="p-2 hover:bg-gray-50"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="px-4 py-2 font-medium">{quantity}</span>
-                    <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="p-2 hover:bg-gray-50"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
+              {/* Price Section */}
+              <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
+                  <span className="text-3xl sm:text-4xl font-bold text-green-600">₹{product.price}</span>
+                  {product.originalPrice && (
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl sm:text-2xl text-gray-500 line-through">₹{product.originalPrice}</span>
+                      <span className="bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+                        {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Product Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500 text-sm">Weight:</span>
+                    <span className="font-semibold text-gray-900">{product.weight || '1KG'}</span>
+                  </div>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500 text-sm">Origin:</span>
+                    <span className="font-semibold text-gray-900">{product.origin || 'KERALA'}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex space-x-4">
-                <button className="flex-1 bg-green-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:bg-green-700 transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2">
-                  <ShoppingCart className="w-5 h-5" />
-                  <span>Buy Now</span>
-                </button>
-                <button className="bg-white text-green-600 border-2 border-green-600 py-4 px-6 rounded-xl font-semibold text-lg hover:bg-green-50 transition-all duration-200 flex items-center justify-center space-x-2">
-                  <ShoppingCart className="w-5 h-5" />
-                  <span>Add to Cart</span>
-                </button>
-                <button
-                  onClick={() => setIsFavorite(!isFavorite)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                    isFavorite
-                      ? 'bg-red-50 border-red-200 text-red-600'
-                      : 'bg-white border-gray-300 text-gray-600 hover:border-red-200 hover:text-red-600'
-                  }`}
-                >
-                  <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
-                </button>
+              {/* Quantity & Actions */}
+              <div className="space-y-6">
+                {/* Quantity Selector */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-6 space-y-4 sm:space-y-0">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-gray-700 font-medium text-sm sm:text-base">Quantity:</span>
+                    <div className="flex items-center bg-white border-2 border-gray-200 rounded-xl shadow-sm">
+                      <button 
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))} 
+                        className="p-2 sm:p-3 hover:bg-gray-50 rounded-l-xl transition-colors"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-lg min-w-[3rem] text-center">
+                        {quantity}
+                      </span>
+                      <button 
+                        onClick={() => setQuantity(quantity + 1)} 
+                        className="p-2 sm:p-3 hover:bg-gray-50 rounded-r-xl transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-base sm:text-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg">
+                      <ShoppingCart className="w-5 h-5" />
+                      <span>Buy Now</span>
+                    </button>
+                    <button className="flex-1 bg-white text-green-600 border-2 border-green-600 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-base sm:text-lg hover:bg-green-50 transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm" onClick={()=>handleAddToCart()}>
+                      <ShoppingCart className="w-5 h-5" />
+                      <span>Add to Cart</span>
+                    </button>
+                  </div>
+                  
+                  {/* Favorite & Share Row */}
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setIsFavorite(!isFavorite)}
+                      className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 shadow-sm ${
+                        isFavorite 
+                          ? 'bg-red-50 border-red-200 text-red-600' 
+                          : 'bg-white border-gray-300 text-gray-600 hover:border-red-200 hover:text-red-600'
+                      }`}
+                    >
+                      <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isFavorite ? 'fill-current' : ''}`} />
+                    </button>
+                    <div className="hidden sm:block">
+                      <ShareProduct productName={product.name} productUrl={window.location.href} />
+                    </div>
+                  </div>
+                  
+                  {/* Mobile Share Button */}
+                  <div className="sm:hidden">
+                    <ShareProduct productName={product.name} productUrl={window.location.href} />
+                  </div>
+                </div>
               </div>
+
+              {/* Trust Indicators */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                  <Truck className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Free Shipping</span>
+                </div>
+                <div className="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                  <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Quality Assured</span>
+                </div>
+                <div className="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                  <Award className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Premium Quality</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Information Tabs */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-12 lg:mb-16 overflow-hidden">
+            {/* Tab Navigation */}
+            <div className="border-b border-gray-200 overflow-x-auto">
+              <nav className="flex space-x-0 px-4 sm:px-6 min-w-max sm:min-w-0">
+                {['description', 'benefits', 'reviews'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`py-3 sm:py-4 px-4 sm:px-6 border-b-2 font-medium text-sm sm:text-base capitalize whitespace-nowrap transition-colors ${
+                      activeTab === tab 
+                        ? 'border-green-600 text-green-600' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </nav>
             </div>
 
-            <div className="flex justify-end">
-              <ShareProduct productName={product.name} productUrl={window.location.href} />
+            {/* Tab Content */}
+            <div className="p-4 sm:p-6 lg:p-8">
+              {activeTab === 'description' && (
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 text-base sm:text-lg leading-relaxed">
+                    {product.description}
+                  </p>
+                </div>
+              )}
+              
+              {activeTab === 'benefits' && product.benefits?.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Product Benefits</h3>
+                  <ul className="space-y-3 sm:space-y-4">
+                    {product.benefits.map((benefit, i) => (
+                      <li key={i} className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                        <span className="text-gray-700 text-sm sm:text-base leading-relaxed">{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {activeTab === 'reviews' && (
+                <div>
+                  {user ? (
+                    <ReviewSection
+                      reviews={reviews}
+                      onAddReview={handleAddReview}
+                      onEditReview={handleEditReview}
+                      onDeleteReview={handleDeleteReview}
+                    />
+                  ) : (
+                    <div className="text-center py-8 sm:py-12">
+                      <div className="max-w-md mx-auto">
+                        <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+                          <Star className="w-8 h-8 text-gray-400 mx-auto" />
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Login to Review</h3>
+                        <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                          Share your experience with other customers
+                        </p>
+                        <a 
+                          href="/login" 
+                          className="inline-block bg-green-600 text-white px-6 py-2 rounded-xl font-medium hover:bg-green-700 transition-colors"
+                        >
+                          Login Now
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+          </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-white rounded-lg border border-gray-100">
-                <Truck className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-gray-700">Free Shipping</span>
-              </div>
-              <div className="text-center p-4 bg-white rounded-lg border border-gray-100">
-                <Shield className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-gray-700">Quality Assured</span>
-              </div>
-              <div className="text-center p-4 bg-white rounded-lg border border-gray-100">
-                <Award className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-gray-700">Premium Quality</span>
-              </div>
-            </div>
+          {/* Related Products */}
+          <div>
+            <RelatedProducts
+              products={relatedProducts}
+              onProductClick={(productId) => navigate(`/products/${productId}`)}
+            />
           </div>
         </div>
-
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-16">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              {['description', 'benefits', 'reviews'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-2 border-b-2 font-medium text-sm capitalize ${
-                    activeTab === tab
-                      ? 'border-green-600 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          <div className="p-6">
-            {activeTab === 'description' && (
-              <div className="prose max-w-none">
-                <p className="text-gray-700 text-lg leading-relaxed">{product.description}</p>
-              </div>
-            )}
-            {activeTab === 'benefits' && (
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-900">Health Benefits</h3>
-                <ul className="space-y-3">
-                  {product.benefits.map((benefit, index) => (
-                    <li key={index} className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
-                      <span className="text-gray-700">{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {activeTab === 'reviews' && (
-              <ReviewSection
-                reviews={reviews}
-                onAddReview={handleAddReview}
-                onEditReview={handleEditReview}
-                onDeleteReview={handleDeleteReview}
-              />
-            )}
-          </div>
-        </div>
-
-        <RelatedProducts
-          products={relatedProducts}
-          onProductClick={(productId) => {
-            console.log('Navigate to product:', productId);
-          }}
-        />
       </div>
-    </div>
+    </Layout>
   );
 };
 
