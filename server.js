@@ -10,6 +10,9 @@ import adminRoute from './routes/adminRoute.js';
 import categoryRoute from './routes/categoryRoute.js';
 import userRoutes from './routes/userRoutes.js';
 import offerRoute from './routes/offerRoute.js'
+import orderRoute from './routes/orderRoute.js';
+import paymentRoute from './routes/paymentRoute.js';
+import addressRoute from './routes/addressRoute.js'
 
 // configure dotenv
 dotenv.config();
@@ -37,6 +40,9 @@ app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/category', categoryRoute);
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/offer',offerRoute)
+app.use('/api/v1/order',orderRoute)
+app.use('/api/v1/payment',paymentRoute);
+app.use('/api/v1/address',addressRoute)
 
 app.get('/', (req, res) => {
   res.send('<h1>Welcome to SpiceMart Website</h1>');

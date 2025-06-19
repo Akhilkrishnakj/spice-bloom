@@ -22,7 +22,7 @@ const LoginPage = ({ message }) => {
         const { token, user } = res.data;
 
         // Save token, user data, and role in localStorage
-        localStorage.setItem("authToken", token);
+        localStorage.setItem("authToken", token); // optional
         localStorage.setItem("user", JSON.stringify(user));
         localStorage.setItem("userRole", user.role);
 

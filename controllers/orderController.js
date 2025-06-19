@@ -37,3 +37,38 @@ export const updateOrderStatus = async (req, res) => {
     res.status(500).json({ success: false, message: "Error updating status" });
   }
 };
+
+export const createOrder = async (req, res) => {
+  try {
+    const { cart, address, payment } = req.body;
+
+    if (!cart?.length || !address || !payment) {
+      return res.status(400).json({ success: false, message: "Cart, address or payment details missing" });
+    }
+
+    const products = cart.map(item => ({
+      product: item._id,
+      quantity: item.quantity,
+    }));
+
+    const order = await orderModel.create({
+      products,
+      buyer: req.user._id,
+      address,
+      payment: {
+        razorpay_order_id: payment.razorpay_order_id,
+        razorpay_payment_id: payment.razorpay_payment_id,
+        razorpay_signature: payment.razorpay_signature,
+        status: "success", // or set dynamically
+        amount: payment.amount,
+        currency: "INR",
+      }
+    });
+
+    res.status(201).json({ success: true, order });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Order creation failed" });
+  }
+};

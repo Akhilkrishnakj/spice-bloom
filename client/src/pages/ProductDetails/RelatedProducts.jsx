@@ -36,11 +36,7 @@ const RelatedProducts = ({ products, onProductClick }) => {
                 </div>
                 <span className="text-xs text-gray-500">({product.reviewCount})</span>
               </div>
-              <div className="flex items-center justify-between">
-                if (typeof product.price !== 'number') {
-  console.warn('Bad price:', product)
-}
-
+              <div className="flex items-center justify-between">                
                 <span className="text-lg font-bold text-green-600">₹{(Number(product.price) || 0).toFixed(2)}</span>
                 <button
                   onClick={(e) => {

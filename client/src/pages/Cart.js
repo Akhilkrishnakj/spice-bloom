@@ -3,9 +3,11 @@ import Layout from '../components/Layouts/Layout';
 import { useSelector, useDispatch } from 'react-redux';
 import { FaTrash, FaMinus, FaPlus } from 'react-icons/fa';
 import { addToCart, decreaseQuantity, removeFromCart } from '../redux/cartSlice';
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const cartItems = useSelector(state => state.cart); // ✅ from redux
 
   // Subtotal calculation
@@ -78,7 +80,8 @@ const Cart = () => {
                   Add ₹{(1000 - subtotal).toLocaleString()} more for free shipping!
                 </div>
               )}
-              <button className="checkout-btn">
+              <button className="checkout-btn" onClick={() => navigate('/checkout')} disabled={cartItems.length === 0}>
+                <span className="checkout-icon">🛒</span>
                 Proceed to Checkout
               </button>
             </div>

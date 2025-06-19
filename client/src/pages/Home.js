@@ -423,7 +423,8 @@ const handleAddToCart = (product) => {
               <p className="mt-4 text-gray-600">Loading products...</p>
             </div>
           ) : error ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12">npm install
+
               <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
                 <p className="text-red-600 text-lg font-semibold mb-2">Failed to load products</p>
                 <p className="text-red-500 text-sm">{error}</p>

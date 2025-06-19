@@ -88,6 +88,7 @@ export const registerController = async (req, res) => {
 export const loginController = async (req, res) => {
   try {
     console.log("JWT_SECRET:", process.env.JWT_SECRET);
+    localStorage.setItem('token', res.data.token);
 
     const { email, password } = req.body;
 

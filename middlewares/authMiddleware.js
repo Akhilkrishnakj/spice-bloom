@@ -10,6 +10,7 @@ export const requireSignIn = (req, res, next) => {
         }
 
         const decode = JWT.verify(token, process.env.JWT_SECRET);
+        console.log("Decoded user:", decode);
         req.user = decode; // Save user data in request
         next();
     } catch (error) {

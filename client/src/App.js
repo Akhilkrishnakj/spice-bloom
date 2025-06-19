@@ -27,6 +27,7 @@ import Orders from './pages/Admin/Orders';
 import UserManagement from './pages/Admin/UserManagement';
 import OfferManagement from './pages/Admin/Offers';
 import ProductDetail from './pages/ProductDetails/ProductDetail';
+import Checkout from './pages/checkout/Checkout';
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
         </Route>
 
         {/* Admin Protected Routes */}
