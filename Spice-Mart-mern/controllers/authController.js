@@ -122,7 +122,7 @@ export const loginController = async (req, res) => {
       expiresIn: "7d",
     });
 
-    // Send response to frontend
+    // Send response
     res.status(200).send({
       success: true,
       message: "Login successful",

@@ -8,5 +8,11 @@ router.get('/orders', isAdmin, getAllOrders);
 router.get('/order/:id', isAdmin, getOrderById);
 router.put('/order/:id/status', isAdmin, updateOrderStatus);
 router.post('/create', requireSignIn, createOrder);
+router.get("/my-orders", requireSignIn, async (req, res) => {
+  const orders = await orderModel
+    .find({ buyer: req.user._id })
+    .populate("products.product");
+  res.json(orders);
+});
 
 export default router;

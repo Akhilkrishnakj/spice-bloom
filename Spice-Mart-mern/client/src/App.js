@@ -20,64 +20,50 @@ import 'react-toastify/dist/ReactToastify.css';
 import PrivateRoute from './components/Routes/PrivateRoute';
 import Dashboard from './pages/Admin/Dashboard';
 import Products from './pages/Admin/Products';
-import ProtectiveRoute from './components/Routes/ProtectiveRoute';
-import TestAdmin from './pages/test-page';
-import ProductManagement from './pages/Admin/ProductManagement';
-import Orders from './pages/Admin/Orders';
-import UserManagement from './pages/Admin/UserManagement';
-import OfferManagement from './pages/Admin/Offers';
-import ProductDetail from './pages/ProductDetails/ProductDetail';
-import Checkout from './pages/checkout/Checkout';
-import Myorder from './pages/Myorder';
-import Wallet from './pages/Wallet';
+import ProtectiveRoute from './components/Routes/AdminRoute';
 
 function App() {
   return (
-    
-    <AuthProvider>
+    <AuthProvider> {/* Wrap App with AuthProvider */}
       <Routes>
-
         <Route path='/' element={<Home />} />
         <Route path='/shop' element={<Shop />} />
         <Route path='/blogs' element={<Blog />} />
         <Route path='/contact' element={<Contact />} />
+        <Route path='*' element={<PageNotFound />} />
         <Route path='/signup' element={<Signup />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/about' element={<About />} />
         <Route path='/policy' element={<Policy />} />
+        {/* <Route path='/cart' element={<Cart />} /> */}
+        {/* <Route path='/wishlist' element={<Wishlist />} /> */}
         <Route path='/verify-otp' element={<VerifyOTP />} />
         <Route path='/success' element={<AuthSuccess />} />
-        <Route path='*' element={<PageNotFound />} />
-        <Route path='/products/:id' element={<ProductDetail />} />
-        <Route path='/my-orders' element={<Myorder />} />
-        <Route path='/wallet' element={<Wallet />} />
+        {/* <Route path='/profile' element={<Profile />} /> */}
 
-        {/* Private Routes */}
-        <Route element={<PrivateRoute />}>
+           {/* Private Routes */}
+           <Route element={<PrivateRoute />}>
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
         </Route>
 
-        {/* Admin Protected Routes */}
-        <Route element={<ProtectiveRoute />}>
-          <Route path='/admin/dashboard' element={<Dashboard />} />
-          <Route path='/admin/products' element={<Products />} />
-          <Route path="/test-admin" element={<TestAdmin />} />
-          <Route path='/admin/products-manage' element={<ProductManagement />} />
-          <Route path='/admin/orders' element={<Orders />} />
-          <Route path='/admin/users' element={<UserManagement />} />
-          <Route path='/admin/offers' element={<OfferManagement/>}/>
+        {/* Admin section */}
+            
+            <Route element={<ProtectiveRoute/>}>
 
-        </Route>
 
+            </Route>
+
+            <Route path='/admin/dashboard' element={<Dashboard/>}/>
+            <Route path='/admin/products' element={<Products/>}/>
+
+
+        
       </Routes>
-
       <ToastContainer />
     </AuthProvider>
   );
 }
-
 
 export default App;

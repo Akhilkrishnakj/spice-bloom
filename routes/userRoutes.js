@@ -1,5 +1,6 @@
 import express from 'express';
 import User from '../models/userModel.js';
+import { requireSignIn } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -12,5 +13,9 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
 });
+
+// routes/userRoutes.js
+// router.get("/me", requireSignIn, getProfile);
+
 
 export default router;

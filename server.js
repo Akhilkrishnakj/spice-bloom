@@ -43,6 +43,7 @@ app.use('/api/v1/offer',offerRoute)
 app.use('/api/v1/order',orderRoute)
 app.use('/api/v1/payment',paymentRoute);
 app.use('/api/v1/address',addressRoute)
+app.use('/api/v1/wallet',orderRoute)
 
 app.get('/', (req, res) => {
   res.send('<h1>Welcome to SpiceMart Website</h1>');
