@@ -39,6 +39,10 @@ export const updateOrderStatus = async (req, res) => {
 };
 
 export const createOrder = async (req, res) => {
+  console.log("Creating Razorpay order for ₹", amount);
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
   try {
     const { cart, address, payment } = req.body;
 

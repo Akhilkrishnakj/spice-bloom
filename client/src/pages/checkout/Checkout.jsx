@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import AddressManager from './AddressMange';
 import Payment from './Payment';
 import OrderSummary from './OrderSummary';
+import axios from 'axios';
 
 const CheckoutPage = () => {
   const cartItems = useSelector((state) => state.cart) || [];
@@ -133,23 +134,60 @@ const CheckoutPage = () => {
 
   const handlePrevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
-  const handlePayment = async () => {
-    setError('');
-    if (!validateForm()) return;
-    setIsProcessing(true);
+ const handlePayment = async () => {
+  if (!validateForm()) return;
 
+  if (selectedPaymentMethod === 'razorpay') {
+    console.log("🟡 Amount sending to backend:", total);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000)); // Simulate delay
-      setPaymentSuccess(true);
+      const { data: orderData } = await axios.post('/api/v1/payment/create-order', {
+        amount: total.toFixed(2) * 100
+      });
+
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: "INR",
+        name: "Spice Bloom",
+        description: "Order Payment",
+        order_id: orderData.id,
+        handler: function (response) {
+          console.log("Razorpay success:", response);
+          setPaymentSuccess(true); // ✅ Show success screen after Razorpay
+        },
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        theme: {
+          color: "#10b981",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
-      setError('Payment failed. Try again.');
+      console.error("Razorpay error:", err);
+      setError("Payment failed. Try again.");
+    }
+
+  } else {
+    // For other payment types (e.g., COD, card, wallet, UPI)
+    try {
+      setIsProcessing(true);
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Fake wait
+      setPaymentSuccess(true);
+    } catch {
+      setError("Payment failed. Try again.");
     } finally {
       setIsProcessing(false);
     }
-  };
+  }
+};
 
   const handleAddressSelect = (address) => {
-    setSelectedAddressId(address ? address.id : null);
+    setSelectedAddressId(address ? address._id : null);
   };
 
   if (paymentSuccess) {

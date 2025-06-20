@@ -7,6 +7,7 @@ const addressSchema = new mongoose.Schema({
   lastName: String,
   phone: String,
   address: String,
+  email: String,
   city: String,
   state: String,
   zipCode: String,
