@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { Star, ShoppingCart, Heart, Truck, Shield, Award, Minus, Plus, ArrowLeft } from 'lucide-react';
+import { Star, ShoppingCart, Heart, Truck, Shield, Award, Minus, Plus, ArrowLeft, Edit3 } from 'lucide-react';
 import Layout from '../../components/Layouts/Layout';
 import ImageZoom from './ImageZoom';
 import ReviewSection from './ReviewSection';
 import RelatedProducts from './RelatedProducts';
 import ShareProduct from './ShareProduct';
+import EditProductModal from '../../components/EditProductModal';
+import BuyNowModal from '../../components/BuyNowModal';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../redux/cartSlice';
@@ -23,12 +25,20 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showBuyNowModal, setShowBuyNowModal] = useState(false);
    
   const cart = useSelector((state) => state.cart?.items || []);
   console.log("Cart state:", cart);
 
-
   const dispatch = useDispatch();
+
+  // Check if user is admin
+  const isAdmin = user?.role === 1;
+
+  // Check if user is logged in and has valid token
+  const isAuthenticated = user && localStorage.getItem('authToken');
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -50,17 +60,19 @@ const ProductDetail = () => {
     const fetchRelated = async () => {
       if (product?.category?._id) {
         try {
-          const { data } = await axios.get(`/api/v1/product/related/${product.category._id}`);
+          const { data } = await axios.get(`/api/v1/product/related/${product.category._id}?productId=${product._id}`);
+          
           if (data.success) {
             setRelatedProducts(data.products);
           }
         } catch (error) {
           console.error("Error fetching related products:", error);
+          // Don't show error to user, just log it
         }
       }
     };
     fetchRelated();
-  }, [product?.category?._id]);
+  }, [product?.category?._id, product?._id]);
 
   const handleAddReview = (review) => {
     const newReview = {
@@ -80,10 +92,14 @@ const ProductDetail = () => {
     setReviews(reviews.filter((r) => r.id !== reviewId));
   };
  
-const handleAddToCart = (product) => {
+  const handleProductUpdate = (updatedProduct) => {
+    setProduct(updatedProduct);
+  };
+ 
+const handleAddToCart = () => {
   if (!product || !product._id) {
     console.error("Invalid product:", product);
-    return;  // Stop the function early
+    return;
   }
 
   const existingItem = cart.find(item => item._id === product._id);
@@ -94,13 +110,13 @@ const handleAddToCart = (product) => {
     dispatch(addToCart({
       ...product,
       img: product.images?.[0] || "/default-placeholder.jpg",
-      id: product._id || product.id
+      id: product._id,
+      _id: product._id,
+      image: product.images?.[0] || "/default-placeholder.jpg"
     }));
     toast.success("Item added to cart!");
   }
 };
-
-
 
   if (!product) {
     return (
@@ -152,9 +168,27 @@ const handleAddToCart = (product) => {
             <div className="lg:col-span-6 space-y-6 lg:space-y-8">
               {/* Product Title & Rating */}
               <div className="space-y-4">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+                <div className="flex items-start justify-between">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight flex-1">
                   {product.name}
                 </h1>
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          toast.error('Please login to edit products');
+                          return;
+                        }
+                        setShowEditModal(true);
+                      }}
+                      className="ml-4 p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors flex items-center space-x-1"
+                      title="Edit Product"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      <span className="hidden sm:inline text-sm font-medium">Edit</span>
+                    </button>
+                  )}
+                </div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
                   <div className="flex items-center space-x-1">
                     {[...Array(5)].map((_, i) => (
@@ -234,11 +268,14 @@ const handleAddToCart = (product) => {
                 {/* Action Buttons */}
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <button className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-base sm:text-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg">
+                    <button 
+                      onClick={() => setShowBuyNowModal(true)}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-base sm:text-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg"
+                    >
                       <ShoppingCart className="w-5 h-5" />
                       <span>Buy Now</span>
                     </button>
-                    <button className="flex-1 bg-white text-green-600 border-2 border-green-600 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-base sm:text-lg hover:bg-green-50 transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm" onClick={()=>handleAddToCart()}>
+                    <button className="flex-1 bg-white text-green-600 border-2 border-green-600 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-semibold text-base sm:text-lg hover:bg-green-50 transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm" onClick={handleAddToCart}>
                       <ShoppingCart className="w-5 h-5" />
                       <span>Add to Cart</span>
                     </button>
@@ -311,15 +348,53 @@ const handleAddToCart = (product) => {
             <div className="p-4 sm:p-6 lg:p-8">
               {activeTab === 'description' && (
                 <div className="prose max-w-none">
+                  <div className="flex items-start justify-between mb-4">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Product Description</h3>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          if (!isAuthenticated) {
+                            toast.error('Please login to edit products');
+                            return;
+                          }
+                          setShowEditModal(true);
+                        }}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors flex items-center space-x-1"
+                        title="Edit Description"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        <span className="text-sm font-medium">Edit</span>
+                      </button>
+                    )}
+                  </div>
                   <p className="text-gray-700 text-base sm:text-lg leading-relaxed">
                     {product.description}
                   </p>
                 </div>
               )}
               
-              {activeTab === 'benefits' && product.benefits?.length > 0 && (
+              {activeTab === 'benefits' && (
                 <div className="space-y-4">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Product Benefits</h3>
+                  <div className="flex items-start justify-between mb-4">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Product Benefits</h3>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          if (!isAuthenticated) {
+                            toast.error('Please login to edit products');
+                            return;
+                          }
+                          setShowEditModal(true);
+                        }}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors flex items-center space-x-1"
+                        title="Edit Benefits"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        <span className="text-sm font-medium">Edit</span>
+                      </button>
+                    )}
+                  </div>
+                  {product.benefits?.length > 0 ? (
                   <ul className="space-y-3 sm:space-y-4">
                     {product.benefits.map((benefit, i) => (
                       <li key={i} className="flex items-start space-x-3">
@@ -328,6 +403,25 @@ const handleAddToCart = (product) => {
                       </li>
                     ))}
                   </ul>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No benefits have been added for this product yet.</p>
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            if (!isAuthenticated) {
+                              toast.error('Please login to edit products');
+                              return;
+                            }
+                            setShowEditModal(true);
+                          }}
+                          className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                          Add Benefits
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
               
@@ -373,6 +467,21 @@ const handleAddToCart = (product) => {
           </div>
         </div>
       </div>
+
+      {/* Edit Product Modal */}
+      <EditProductModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        product={product}
+        onUpdate={handleProductUpdate}
+      />
+
+      {/* Buy Now Modal */}
+      <BuyNowModal
+        isOpen={showBuyNowModal}
+        onClose={() => setShowBuyNowModal(false)}
+        product={product}
+      />
     </Layout>
   );
 };

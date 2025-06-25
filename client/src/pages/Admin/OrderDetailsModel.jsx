@@ -1,6 +1,15 @@
 import React from 'react';
-import { X, User, Mail, Phone, MapPin, Package, Calendar, CreditCard } from 'lucide-react';
+import { X, User, Mail, Phone, MapPin, Package, Calendar, CreditCard, CheckCircle, Truck, Clock, X as XIcon } from 'lucide-react';
 import { formatDate } from './utils/dataUtils';
+
+const trackingSteps = [
+  { key: 'pending', label: 'Pending', icon: Clock },
+  { key: 'processing', label: 'Processing', icon: Package },
+  { key: 'shipped', label: 'Shipped', icon: Truck },
+  { key: 'out_for_delivery', label: 'Out for Delivery', icon: Truck },
+  { key: 'delivered', label: 'Delivered', icon: CheckCircle },
+  { key: 'cancelled', label: 'Cancelled', icon: XIcon },
+];
 
 const OrderDetailsModal = ({ order, onClose }) => {
   const getStatusBadge = (status) => {
@@ -8,15 +17,21 @@ const OrderDetailsModal = ({ order, onClose }) => {
       completed: 'bg-green-100 text-green-800 border-green-200',
       processing: 'bg-blue-100 text-blue-800 border-blue-200',
       pending: 'bg-orange-100 text-orange-800 border-orange-200',
-      cancelled: 'bg-red-100 text-red-800 border-red-200'
+      cancelled: 'bg-red-100 text-red-800 border-red-200',
+      shipped: 'bg-purple-100 text-purple-800 border-purple-200',
+      delivered: 'bg-green-100 text-green-800 border-green-200',
     };
-
     return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${styles[status]}`}>
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${styles[status] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
   };
+
+  // Find the current step index
+  const currentStepIndex = trackingSteps.findIndex(
+    (step) => step.key.toLowerCase() === order.status?.toLowerCase()
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -41,6 +56,47 @@ const OrderDetailsModal = ({ order, onClose }) => {
         {/* Content */}
         <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
           <div className="p-6 space-y-6">
+            {/* Live Tracking Stepper */}
+            <div className="mb-6">
+              <div className="flex flex-col items-center md:flex-row md:items-center md:justify-center gap-4">
+                {trackingSteps.map((step, idx) => {
+                  const Icon = step.icon;
+                  const isCompleted = idx < currentStepIndex;
+                  const isActive = idx === currentStepIndex;
+                  const isCancelled = order.status?.toLowerCase() === 'cancelled' && step.key === 'cancelled';
+                  return (
+                    <React.Fragment key={step.key}>
+                      <div className={`flex flex-col items-center`}>
+                        <div className={`w-10 h-10 flex items-center justify-center rounded-full border-2 transition-all duration-300
+                          ${isCancelled ? 'bg-red-100 border-red-400' :
+                            isCompleted ? 'bg-green-100 border-green-400' :
+                            isActive ? 'bg-blue-100 border-blue-400' :
+                            'bg-gray-100 border-gray-300'}
+                        `}>
+                          <Icon className={`w-5 h-5
+                            ${isCancelled ? 'text-red-600' :
+                              isCompleted ? 'text-green-600' :
+                              isActive ? 'text-blue-600' :
+                              'text-gray-400'}
+                          `} />
+                        </div>
+                        <span className={`mt-2 text-xs font-medium
+                          ${isCancelled ? 'text-red-600' :
+                            isCompleted ? 'text-green-700' :
+                            isActive ? 'text-blue-700' :
+                            'text-gray-500'}
+                        `}>{step.label}</span>
+                      </div>
+                      {idx < trackingSteps.length - 1 && (
+                        <div className={`hidden md:block h-1 w-10 md:w-16 rounded-full
+                          ${idx < currentStepIndex ? 'bg-green-400' : 'bg-gray-200'}
+                        `}></div>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
             {/* Order Status & Summary */}
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-4">

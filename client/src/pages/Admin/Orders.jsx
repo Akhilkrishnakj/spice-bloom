@@ -1,19 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo,useEffect } from 'react';
 import { Search, Filter, Package, Eye, Edit, Trash2, Calendar } from 'lucide-react';
- import { mockOrders } from './mockOrders';
 import { formatDate, isDateInRange } from './utils/dataUtils';
 import OrderDetailsModal from './OrderDetailsModel';
 import StatusUpdateModal from './StatusUpdateModel';
 import DeleteConfirmModal from './DeleteConfirmModel';
 import OrderCard from './OrderCard';
 import FilterBar from './FilterBar';
+import axios from 'axios';
 
 
-console.log('mockOrders at load:', mockOrders);
 
 
 const Orders = () => {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [statusUpdateOrder, setStatusUpdateOrder] = useState(null);
   const [deleteOrder, setDeleteOrder] = useState(null);
@@ -24,11 +23,31 @@ const Orders = () => {
     endDate: ''
   });
 
+  useEffect(() => {
+  const fetchOrders = async () => {
+    try {
+      const { data } = await axios.get("/api/v1/admin/orders", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+      setOrders(data.orders); // Assuming your backend returns { orders: [...] }
+    } catch (err) {
+      console.error("❌ Failed to fetch orders:", err);
+    }
+  };
+
+  fetchOrders();
+}, []);
+
+
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
-      const matchesSearch = order.customerName.toLowerCase().includes(filters.search.toLowerCase()) ||
-                           order.id.toLowerCase().includes(filters.search.toLowerCase()) ||
-                           order.customerEmail.toLowerCase().includes(filters.search.toLowerCase());
+      const matchesSearch =
+  (order.buyer?.name?.toLowerCase() || '').includes(filters.search.toLowerCase()) ||
+  (order.buyer?.email?.toLowerCase() || '').includes(filters.search.toLowerCase()) ||
+  order._id.toLowerCase().includes(filters.search.toLowerCase());
+
       
       const matchesStatus = filters.status === 'all' || order.status === filters.status;
       
@@ -40,7 +59,7 @@ const Orders = () => {
 
   const handleUpdateStatus = (orderId, newStatus) => {
     setOrders(orders.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
+      order._id === orderId ? { ...order, status: newStatus } : order
     ));
     setStatusUpdateOrder(null);
   };

@@ -1,528 +1,625 @@
-import React, { useState } from 'react';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Edit3, 
-  Save, 
-  ShoppingBag, 
-  Wallet, 
-  Settings, 
-  LogOut,
-  Camera,
-  Bell,
-  Star,
-  Coins,
-  Shield,
-  ChevronRight,
-  Award,
-  Gift,
-  CreditCard,
-  Smartphone,
-  Globe,
-  Lock,
-  Eye,
-  EyeOff,
-  Plus,
-  Trash2,
-  Heart,
-  Package,
-  TrendingUp,
-  Zap
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  User, Mail, Phone, MapPin, Edit3, Save, ShoppingBag, Wallet, LogOut, Heart, Bell, Shield, ChevronRight, Settings, Award, Star, Zap, TrendingUp, Loader2, Camera, X
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { getCurrentUser, updateUserProfile, getUserStats } from '../api/user';
 import { useNavigate } from 'react-router-dom';
+import Layout from '../components/Layouts/Layout';
+
+
+const DEFAULT_PROFILE_IMAGE = 'https://imgs.search.brave.com/d3lvpgl8vJsPCMoI_aQMaWe0MymkSAc4y9KtWcdp-rQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/ZnJlZS12ZWN0b3Iv/Ymx1ZS1jaXJjbGUt/d2l0aC13aGl0ZS11/c2VyXzc4MzcwLTQ3/MDcuanBnP3NlbXQ9/YWlzX2l0ZW1zX2Jv/b3N0ZWQmdz03NDA';
 
 const ProfilePage = () => {
-  const [activeTab, setActiveTab] = useState('profile');
+  const { user: authUser, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [notifications, setNotifications] = useState({
-    orders: true,
-    promotions: false,
-    newsletter: true,
-    security: true
-  });
+  const [activeTab, setActiveTab] = useState('profile');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
+  // Real user data from API
   const [userInfo, setUserInfo] = useState({
-    name: 'Alex Johnson',
-    email: 'alex.johnson@example.com',
-    phone: '+91 9876543210',
-    address: '123 Spice Garden, Kochi, Kerala, India',
-    profilePic: 'https://images.pexels.com/photos/1704488/pexels-photo-1704488.jpeg?auto=compress&cs=tinysrgb&w=400',
-    coverPic: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    bio: 'Passionate about authentic spices and traditional cooking. Love exploring new flavors from around the world.',
-    joinDate: 'January 2024'
+    name: '',
+    email: '',
+    phone: '',
+    profilePic: '',
+    joinDate: '',
+    bio: ''
   });
 
   const navigate = useNavigate();
 
-  const handleOrderButton = () => {
-    navigate('/my-orders');
+  // Real stats from API
+  const [stats, setStats] = useState([
+    { label: 'Total Orders', value: '0', icon: ShoppingBag, trend: '+0%', color: 'emerald' },
+    { label: 'Wishlist Items', value: '0', icon: Heart, trend: '+0%', color: 'green' },
+    { label: 'Wallet Balance', value: '$0', icon: Wallet, trend: '+0%', color: 'teal' },
+    { label: 'Reward Points', value: '0', icon: Star, trend: '+0%', color: 'lime' }
+  ]);
+
+  const [notifications, setNotifications] = useState({
+    orders: true,
+    promotions: false,
+    newsletter: true,
+    security: true,
+  });
+
+  // Fetch user data and stats on component mount
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      // Fetch user profile and stats in parallel
+      const [userData, statsData] = await Promise.all([
+        getCurrentUser(),
+        getUserStats()
+      ]);
+
+      // Update user info
+      setUserInfo({
+        name: userData.name || '',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        profilePic: userData.profilePic && userData.profilePic.trim() !== '' ? userData.profilePic : DEFAULT_PROFILE_IMAGE,
+        joinDate: userData.joinDate ? new Date(userData.joinDate).toLocaleDateString('en-US', { 
+        year: 'numeric',
+        month: 'long',
+          day: 'numeric' 
+        }) : 'Recently',
+        bio: userData.bio || ''
+      });
+
+      // Update stats
+      setStats([
+        { label: 'Total Orders', value: statsData.totalOrders?.toString() || '0', icon: ShoppingBag, trend: '+12%', color: 'emerald' },
+        { label: 'Wishlist Items', value: statsData.wishlistCount?.toString() || '0', icon: Heart, trend: '+5%', color: 'green' },
+        { label: 'Wallet Balance', value: `$${statsData.walletBalance || 0}`, icon: Wallet, trend: '+18%', color: 'teal' },
+        { label: 'Reward Points', value: statsData.rewardPoints?.toString() || '0', icon: Star, trend: '+23%', color: 'lime' }
+      ]);
+
+    } catch (err) {
+      console.error('Error fetching user data:', err);
+      setError('Failed to load profile data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleWalletButton = () => {
-    navigate('/wallet');
-  };
+  const handleEdit = () => setIsEditing(!isEditing);
 
-  const handleEdit = () => {
-    setIsEditing(!isEditing);
-  };
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError('');
+      setSuccess('');
 
-  const handleSave = () => {
-    setIsEditing(false);
-    console.log('Profile saved:', userInfo);
+      const updateData = {
+        name: userInfo.name,
+        phone: userInfo.phone,
+        bio: userInfo.bio,
+        profilePic: imagePreview !== null ? imagePreview : userInfo.profilePic || ''
+      };
+
+      await updateUserProfile(updateData);
+      
+      setSuccess('Profile updated successfully!');
+      setIsEditing(false);
+      setImagePreview(null);
+      setImageUploading(false);
+      
+      // Refresh data
+      await fetchUserData();
+
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setError('Failed to update profile. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogout = () => {
-    console.log('Logging out...');
+    logout();
+    window.location.href = '/login';
   };
 
-  const stats = [
-    { label: 'Total Orders', value: '24', icon: ShoppingBag, color: 'from-blue-500 to-blue-600', bgColor: 'from-blue-50 to-blue-100' },
-    { label: 'Blooms Coins', value: '1,250', icon: Coins, color: 'from-yellow-500 to-yellow-600', bgColor: 'from-yellow-50 to-yellow-100' },
-    { label: 'Wishlist Items', value: '18', icon: Heart, color: 'from-pink-500 to-pink-600', bgColor: 'from-pink-50 to-pink-100' },
-    { label: 'Reviews Given', value: '12', icon: Star, color: 'from-purple-500 to-purple-600', bgColor: 'from-purple-50 to-purple-100' }
-  ];
+  async function uploadToCloudinary(file) {
+    const url = 'https://api.cloudinary.com/v1_1/dyup8ivlh/image/upload'; // TODO: Replace <your_cloud_name>
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'spice_bloom'); // TODO: Replace <your_unsigned_upload_preset>
 
-  const renderProfileContent = () => (
-    <div className="space-y-10">
-      {/* Enhanced Stats Cards with Luxury Animations */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <div 
-            key={index} 
-            className="group relative overflow-hidden bg-white rounded-3xl border border-gray-100 hover:border-gray-200 transition-all duration-700 hover:shadow-2xl hover:shadow-gray-200/50 transform hover:-translate-y-2"
-            style={{ animationDelay: `${index * 150}ms` }}
-          >
-            {/* Animated Background Gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgColor} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
-            
-            {/* Floating Particles */}
-            <div className="absolute top-2 right-2 w-1 h-1 bg-gray-300 rounded-full opacity-0 group-hover:opacity-100 animate-pulse transition-opacity duration-700"></div>
-            <div className="absolute bottom-4 left-4 w-0.5 h-0.5 bg-gray-400 rounded-full opacity-0 group-hover:opacity-100 animate-pulse delay-300 transition-opacity duration-700"></div>
-            
-            <div className="relative p-8">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold text-gray-900 group-hover:scale-110 transition-transform duration-500">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm font-medium text-gray-600 group-hover:text-gray-700 transition-colors duration-300">
-                    {stat.label}
-                  </div>
-                </div>
-                <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.color} shadow-lg group-hover:shadow-xl group-hover:scale-125 transition-all duration-500 transform group-hover:rotate-12`}>
-                  <stat.icon size={24} className="text-white" />
-                </div>
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await response.json();
+    if (!data.secure_url) throw new Error('Cloudinary upload failed');
+    return data.secure_url;
+  }
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setImageUploading(true);
+      setError('');
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file.');
+        setImageUploading(false);
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB.');
+        setImageUploading(false);
+        return;
+      }
+
+      try {
+        const cloudinaryUrl = await uploadToCloudinary(file);
+        setImagePreview(cloudinaryUrl); // Use the Cloudinary URL as preview
+        setUserInfo((prev) => ({ ...prev, profilePic: cloudinaryUrl }));
+        setImageUploading(false);
+      } catch (err) {
+        setError('Failed to upload image. Please try again.');
+        setImageUploading(false);
+      }
+    }
+  };
+
+  const removeImagePreview = () => {
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50/30 to-emerald-50/50 flex items-center justify-center">
+        <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8">
+          <div className="flex items-center gap-4">
+            <Loader2 size={32} className="animate-spin text-emerald-600" />
+            <div className="text-xl font-bold text-slate-800">Loading your profile...</div>
               </div>
-              
-              {/* Progress Bar Animation */}
-              <div className="mt-4 h-1 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full bg-gradient-to-r ${stat.color} transform -translate-x-full group-hover:translate-x-0 transition-transform duration-1000 ease-out`}
-                  style={{ width: '70%' }}
-                ></div>
-              </div>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Quick Action Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <button className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 rounded-3xl p-8 text-white shadow-2xl hover:shadow-emerald-500/25 transition-all duration-700 transform hover:-translate-y-1 hover:scale-105" onClick={handleOrderButton}>
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-          <div className="absolute top-4 right-4 w-2 h-2 bg-white/30 rounded-full animate-ping"></div>
-          <div className="relative flex items-center justify-between">
-            <div className="text-left">
-              <h3 className="text-2xl font-bold mb-2 group-hover:scale-105 transition-transform duration-500">My Orders</h3>
-              <p className="text-emerald-100 group-hover:text-white transition-colors duration-300">Track your spice deliveries</p>
-            </div>
-            <div className="p-4 bg-white/20 rounded-2xl group-hover:bg-white/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
-              <Package size={32} />
-            </div>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700"></div>
-        </button>
-
-        <button className="group relative overflow-hidden bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-600 rounded-3xl p-8 text-white shadow-2xl hover:shadow-blue-500/25 transition-all duration-700 transform hover:-translate-y-1 hover:scale-105" onClick={handleWalletButton}>
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-          <div className="absolute top-4 right-4 w-2 h-2 bg-white/30 rounded-full animate-ping delay-500"></div>
-          <div className="relative flex items-center justify-between">
-            <div className="text-left">
-              <h3 className="text-2xl font-bold mb-2 group-hover:scale-105 transition-transform duration-500">My Wallet</h3>
-              <p className="text-blue-100 group-hover:text-white transition-colors duration-300">Manage your payments</p>
-            </div>
-            <div className="p-4 bg-white/20 rounded-2xl group-hover:bg-white/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
-              <Wallet size={32} />
-            </div>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700"></div>
-        </button>
-      </div>
-
-      {/* Enhanced Personal Information */}
-      <div className="group bg-white/90 backdrop-blur-xl rounded-3xl border border-gray-100 hover:border-gray-200 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700">
-        <div className="relative p-10 border-b border-gray-50">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-1000"></div>
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <h3 className="text-3xl font-bold text-gray-900 group-hover:text-emerald-600 transition-colors duration-500">Personal Information</h3>
-              <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300">Manage your account details and preferences</p>
-            </div>
-            <button
-              onClick={isEditing ? handleSave : handleEdit}
-              className="group/btn relative overflow-hidden flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-2xl transition-all duration-500 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
-              <div className="relative flex items-center gap-3">
-                <div className="group-hover/btn:scale-110 group-hover/btn:rotate-12 transition-all duration-300">
-                  {isEditing ? <Save size={20} /> : <Edit3 size={20} />}
-                </div>
-                <span className="font-semibold">{isEditing ? 'Save Changes' : 'Edit Profile'}</span>
-              </div>
-            </button>
-          </div>
-        </div>
-        
-        <div className="p-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <div className="space-y-8">
-              {[
-                { icon: User, label: 'Full Name', value: userInfo.name, key: 'name' },
-                { icon: Mail, label: 'Email Address', value: userInfo.email, key: 'email' },
-                { icon: Phone, label: 'Phone Number', value: userInfo.phone, key: 'phone' }
-              ].map((field, index) => (
-                <div key={field.key} className="group/field space-y-3" style={{ animationDelay: `${index * 100}ms` }}>
-                  <label className="text-sm font-bold text-gray-700 flex items-center gap-3 group-hover/field:text-emerald-600 transition-colors duration-300">
-                    <div className="p-2 bg-emerald-50 rounded-xl group-hover/field:bg-emerald-100 group-hover/field:scale-110 transition-all duration-300">
-                      <field.icon size={16} className="text-emerald-600" />
-                    </div>
-                    {field.label}
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type={field.key === 'email' ? 'email' : field.key === 'phone' ? 'tel' : 'text'}
-                      value={field.value}
-                      onChange={(e) => setUserInfo({...userInfo, [field.key]: e.target.value})}
-                      className="w-full px-6 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all duration-500 text-gray-900 placeholder-gray-500 hover:bg-gray-50 focus:bg-white focus:shadow-lg transform focus:scale-105"
-                    />
-                  ) : (
-                    <div className="px-6 py-4 bg-gray-50/50 rounded-2xl text-gray-900 font-medium group-hover/field:bg-gray-100/80 group-hover/field:shadow-md transition-all duration-300 transform group-hover/field:scale-105">
-                      {field.value}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-8">
-              {[
-                { icon: MapPin, label: 'Address', value: userInfo.address, key: 'address', multiline: true },
-                { icon: User, label: 'Bio', value: userInfo.bio, key: 'bio', multiline: true }
-              ].map((field, index) => (
-                <div key={field.key} className="group/field space-y-3" style={{ animationDelay: `${(index + 3) * 100}ms` }}>
-                  <label className="text-sm font-bold text-gray-700 flex items-center gap-3 group-hover/field:text-emerald-600 transition-colors duration-300">
-                    <div className="p-2 bg-emerald-50 rounded-xl group-hover/field:bg-emerald-100 group-hover/field:scale-110 transition-all duration-300">
-                      <field.icon size={16} className="text-emerald-600" />
-                    </div>
-                    {field.label}
-                  </label>
-                  {isEditing ? (
-                    <textarea
-                      value={field.value}
-                      onChange={(e) => setUserInfo({...userInfo, [field.key]: e.target.value})}
-                      rows={4}
-                      placeholder={field.key === 'bio' ? 'Tell us about yourself...' : ''}
-                      className="w-full px-6 py-4 bg-gray-50/80 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all duration-500 text-gray-900 placeholder-gray-500 resize-none hover:bg-gray-50 focus:bg-white focus:shadow-lg transform focus:scale-105"
-                    />
-                  ) : (
-                    <div className="px-6 py-4 bg-gray-50/50 rounded-2xl text-gray-900 font-medium min-h-[120px] flex items-center group-hover/field:bg-gray-100/80 group-hover/field:shadow-md transition-all duration-300 transform group-hover/field:scale-105">
-                      {field.value}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderSettings = () => (
-    <div className="space-y-10">
-      {/* Premium Features with Enhanced Animations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Seller Program */}
-        <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100 rounded-3xl border border-emerald-200/50 hover:border-emerald-300/50 transition-all duration-700 hover:shadow-2xl hover:shadow-emerald-500/10 transform hover:-translate-y-2">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-          <div className="absolute top-4 right-4 w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-          <div className="absolute bottom-4 left-4 w-1 h-1 bg-emerald-300 rounded-full animate-ping delay-1000"></div>
-          
-          <div className="relative p-10">
-            <div className="flex items-start justify-between mb-8">
-              <div className="flex items-center gap-5">
-                <div className="p-5 bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl shadow-lg group-hover:shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                  <TrendingUp size={32} className="text-white" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 group-hover:text-emerald-700 transition-colors duration-500">Become a Blooms Seller</h3>
-                  <p className="text-gray-600 mt-2 group-hover:text-gray-700 transition-colors duration-300">Join our premium seller program</p>
-                </div>
-              </div>
-              <span className="px-4 py-2 bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700 text-sm font-bold rounded-full shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
-                Coming Soon
-              </span>
-            </div>
-            <p className="text-gray-700 mb-8 leading-relaxed group-hover:text-gray-800 transition-colors duration-300">Start your journey as a premium spice seller and reach thousands of customers worldwide with our advanced seller tools.</p>
-            <button className="group/btn w-full px-8 py-5 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-2xl transition-all duration-500 font-bold flex items-center justify-center gap-3 shadow-lg hover:shadow-2xl transform hover:-translate-y-1">
-              <span>Learn More</span>
-              <ChevronRight size={20} className="group-hover/btn:translate-x-1 group-hover/btn:scale-110 transition-all duration-300" />
-            </button>
-          </div>
-        </div>
-
-        {/* Blooms Coins */}
-        <div className="group relative overflow-hidden bg-gradient-to-br from-yellow-50 via-orange-50 to-yellow-100 rounded-3xl border border-yellow-200/50 hover:border-yellow-300/50 transition-all duration-700 hover:shadow-2xl hover:shadow-yellow-500/10 transform hover:-translate-y-2">
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-          <div className="absolute top-4 right-4 w-2 h-2 bg-yellow-400 rounded-full animate-pulse delay-500"></div>
-          <div className="absolute bottom-4 left-4 w-1 h-1 bg-yellow-300 rounded-full animate-ping delay-700"></div>
-          
-          <div className="relative p-10">
-            <div className="flex items-start justify-between mb-8">
-              <div className="flex items-center gap-5">
-                <div className="p-5 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl shadow-lg group-hover:shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                  <Zap size={32} className="text-white" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 group-hover:text-yellow-700 transition-colors duration-500">Blooms Coins</h3>
-                  <p className="text-gray-600 mt-2 group-hover:text-gray-700 transition-colors duration-300">Earn rewards with every purchase</p>
-                </div>
-              </div>
-              <span className="px-4 py-2 bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-700 text-sm font-bold rounded-full shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
-                Coming Soon
-              </span>
-            </div>
-            <p className="text-gray-700 mb-8 leading-relaxed group-hover:text-gray-800 transition-colors duration-300">Collect coins with every order and redeem them for exclusive discounts, premium spices, and special offers.</p>
-            <button className="group/btn w-full px-8 py-5 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white rounded-2xl transition-all duration-500 font-bold flex items-center justify-center gap-3 shadow-lg hover:shadow-2xl transform hover:-translate-y-1">
-              <span>Learn More</span>
-              <ChevronRight size={20} className="group-hover/btn:translate-x-1 group-hover/btn:scale-110 transition-all duration-300" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced Notifications */}
-      <div className="group bg-white/95 backdrop-blur-xl rounded-3xl border border-gray-100 hover:border-gray-200 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700">
-        <div className="relative p-10 border-b border-gray-50">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-1000"></div>
-          <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-4 group-hover:text-blue-600 transition-colors duration-500">
-            <div className="p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 group-hover:scale-110 transition-all duration-300">
-              <Bell size={28} className="text-blue-600" />
-            </div>
-            Notification Preferences
-          </h3>
-          <p className="text-gray-600 mt-3 group-hover:text-gray-700 transition-colors duration-300">Customize how you want to receive updates and alerts</p>
-        </div>
-        <div className="p-10">
-          <div className="space-y-8">
-            {Object.entries(notifications).map(([key, value], index) => (
-              <div key={key} className="group/item flex items-center justify-between p-6 rounded-2xl hover:bg-gray-50/80 transition-all duration-500 transform hover:scale-105" style={{ animationDelay: `${index * 100}ms` }}>
-                <div className="flex items-center gap-5">
-                  <div className="p-3 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl group-hover/item:from-emerald-100 group-hover/item:to-green-100 group-hover/item:scale-110 transition-all duration-300">
-                    <Bell size={20} className="text-emerald-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 text-lg group-hover/item:text-emerald-600 transition-colors duration-300">
-                      {key === 'orders' ? 'Order Updates' : 
-                       key === 'promotions' ? 'Promotional Offers' : 
-                       key === 'newsletter' ? 'Newsletter' : 'Security Alerts'}
-                    </h4>
-                    <p className="text-gray-600 mt-1 group-hover/item:text-gray-700 transition-colors duration-300">
-                      {key === 'orders' ? 'Get notified about your order status and delivery updates' : 
-                       key === 'promotions' ? 'Receive special offers, discounts, and seasonal deals' : 
-                       key === 'newsletter' ? 'Weekly newsletter with recipes, tips, and spice guides' :
-                       'Important security notifications and account alerts'}
-                    </p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer group-hover/item:scale-110 transition-transform duration-300">
-                  <input
-                    type="checkbox"
-                    checked={value}
-                    onChange={(e) => setNotifications({...notifications, [key]: e.target.checked})}
-                    className="sr-only peer"
-                  />
-                  <div className="w-16 h-9 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300/30 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-8 after:transition-all after:duration-300 peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-green-600 shadow-lg peer-checked:shadow-emerald-500/25"></div>
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced Security & Privacy */}
-      <div className="group bg-white/95 backdrop-blur-xl rounded-3xl border border-gray-100 hover:border-gray-200 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-700">
-        <div className="relative p-10 border-b border-gray-50">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-pink-500 to-red-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-1000"></div>
-          <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-4 group-hover:text-red-600 transition-colors duration-500">
-            <div className="p-3 bg-red-50 rounded-2xl group-hover:bg-red-100 group-hover:scale-110 transition-all duration-300">
-              <Shield size={28} className="text-red-600" />
-            </div>
-            Security & Privacy
-          </h3>
-          <p className="text-gray-600 mt-3 group-hover:text-gray-700 transition-colors duration-300">Manage your account security and privacy settings</p>
-        </div>
-        <div className="p-10">
-          <div className="space-y-6">
-            {[
-              { icon: Lock, title: 'Change Password', desc: 'Update your account password for better security', action: 'Change', color: 'from-blue-500 to-blue-600' },
-              { icon: Smartphone, title: 'Two-Factor Authentication', desc: 'Add an extra layer of security to your account', action: 'Enable', color: 'from-green-500 to-green-600' },
-              { icon: Eye, title: 'Privacy Settings', desc: 'Control who can see your profile and activity', action: 'Manage', color: 'from-purple-500 to-purple-600' },
-              { icon: Globe, title: 'Data & Privacy', desc: 'Download your data or delete your account', action: 'View', color: 'from-orange-500 to-orange-600' }
-            ].map((item, index) => (
-              <button key={index} className="group/item w-full flex items-center justify-between p-6 rounded-2xl hover:bg-gray-50/80 transition-all duration-500 transform hover:scale-105 hover:shadow-lg" style={{ animationDelay: `${index * 100}ms` }}>
-                <div className="flex items-center gap-5">
-                  <div className={`p-3 bg-gradient-to-br ${item.color} rounded-2xl shadow-lg group-hover/item:shadow-xl group-hover/item:scale-110 transition-all duration-300`}>
-                    <item.icon size={20} className="text-white" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-gray-900 text-lg group-hover/item:text-gray-800 transition-colors duration-300">{item.title}</div>
-                    <div className="text-gray-600 mt-1 group-hover/item:text-gray-700 transition-colors duration-300">{item.desc}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-emerald-600 font-bold group-hover/item:text-emerald-700 transition-colors duration-300">
-                  <span>{item.action}</span>
-                  <ChevronRight size={18} className="group-hover/item:translate-x-1 group-hover/item:scale-110 transition-all duration-300" />
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50/20 relative overflow-hidden">
-      {/* Animated Background Elements */}
+    <Layout>
+    <div className="min-h-screen relative overflow-hidden" style={{
+      background: 'linear-gradient(135deg, #e0fce6 0%, #fff 60%, #6ee7b7 100%)',
+    }}>
+      {/* Advanced Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-emerald-200/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-32 w-96 h-96 bg-green-200/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-blue-200/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-emerald-200/20 to-green-300/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/4 -left-32 w-80 h-80 bg-gradient-to-tr from-green-200/15 to-emerald-200/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-gradient-to-bl from-teal-200/10 to-green-100/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgb(34,197,94) 1px, transparent 0)`,
+          backgroundSize: '40px 40px'
+        }}></div>
       </div>
 
-      {/* Enhanced Header */}
-      <div className="relative overflow-hidden">
-        {/* Cover Photo with Parallax Effect */}
-        <div 
-          className="h-96 bg-gradient-to-br from-emerald-600 via-green-600 to-emerald-700 relative transform transition-transform duration-1000 hover:scale-105"
-          style={{ 
-            backgroundImage: `linear-gradient(135deg, rgba(16, 185, 129, 0.85), rgba(5, 150, 105, 0.9)), url(${userInfo.coverPic})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed'
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
-          
-          {/* Floating Particles */}
-          <div className="absolute top-10 left-10 w-3 h-3 bg-white/30 rounded-full animate-bounce"></div>
-          <div className="absolute top-20 right-20 w-2 h-2 bg-white/40 rounded-full animate-bounce delay-500"></div>
-          <div className="absolute bottom-20 left-1/4 w-1 h-1 bg-white/50 rounded-full animate-bounce delay-1000"></div>
-          <div className="absolute bottom-32 right-1/3 w-2 h-2 bg-white/35 rounded-full animate-bounce delay-1500"></div>
-          
-          <button className="absolute top-8 right-8 p-4 bg-white/20 backdrop-blur-md rounded-3xl hover:bg-white/30 transition-all duration-500 group shadow-2xl hover:shadow-white/10 transform hover:-translate-y-1 hover:scale-110">
-            <Camera size={24} className="text-white group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
+      <div className="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
+        {/* Error/Success Messages */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4">
+            <div className="text-red-700 font-medium">{error}</div>
+          </div>
+        )}
+        
+        {success && (
+          <div className="mb-6 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+            <div className="text-emerald-700 font-medium">{success}</div>
+          </div>
+        )}
+
+        {/* Header Section */}
+        <div className="mb-12">
+          <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl shadow-green-500/5 p-8 relative overflow-hidden">
+            {/* Premium glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-transparent to-green-500/5 rounded-3xl"></div>
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent"></div>
+            
+            <div className="relative flex flex-col lg:flex-row items-center gap-8">
+              {/* Profile Image */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-all duration-700"></div>
+                <div className="relative w-32 h-32 lg:w-40 lg:h-40 rounded-3xl overflow-hidden border-4 border-white/50 shadow-2xl group-hover:scale-105 transition-all duration-500">
+                  <img 
+                    src={imagePreview || userInfo.profilePic || DEFAULT_PROFILE_IMAGE} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+                  
+                  {/* Image Upload Loading Overlay */}
+                  {imageUploading && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 size={24} className="animate-spin text-white" />
+                        <span className="text-white text-xs font-medium">Processing...</span>
+                    </div>
+                    </div>
+                  )}
+                  
+                  {/* Image Upload Overlay */}
+                  {isEditing && !imageUploading && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="flex flex-col items-center gap-2">
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="p-3 bg-white/90 rounded-full hover:bg-white transition-colors duration-300"
+                          title="Click to upload a new profile picture"
+                        >
+                          <Camera size={20} className="text-slate-700" />
+                        </button>
+                        <span className="text-white text-xs font-medium">Change Photo</span>
+                        <span className="text-white/80 text-xs text-center px-2">Max 5MB</span>
+                    </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Remove Image Button */}
+                {isEditing && (userInfo.profilePic && userInfo.profilePic !== DEFAULT_PROFILE_IMAGE) && !imagePreview && (
+                  <button
+                    onClick={async () => {
+                      setUserInfo({ ...userInfo, profilePic: '' });
+                      setImagePreview(null);
+                      setSaving(true);
+                      setError('');
+                      try {
+                        await updateUserProfile({ ...userInfo, profilePic: '' });
+                        await fetchUserData();
+                        setSuccess('Profile image removed.');
+                      } catch (err) {
+                        setError('Failed to remove profile image.');
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 p-2 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors duration-300 shadow-lg z-10"
+                    title="Remove profile image"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+                
+                {/* Hidden File Input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Profile Info */}
+              <div className="flex-1 text-center lg:text-left">
+                <div className="mb-4">
+                  <h1 className="text-4xl lg:text-5xl font-black text-slate-800 mb-2 tracking-tight">
+                    {userInfo.name || 'User'}
+                  </h1>
+                  <p className="text-slate-600 text-lg mb-3">{userInfo.email}</p>
+                  <div className="flex flex-wrap justify-center lg:justify-start gap-3">
+                    <span className="px-4 py-2 bg-gradient-to-r from-emerald-500/10 to-green-500/10 text-emerald-700 rounded-full text-sm font-semibold border border-emerald-200/50">
+                      Member since {userInfo.joinDate}
+                    </span>
+                    <span className="px-4 py-2 bg-gradient-to-r from-green-500/10 to-teal-500/10 text-green-700 rounded-full text-sm font-semibold border border-green-200/50 flex items-center gap-1">
+                      <Shield size={14} />
+                      Verified
+                    </span>
+                </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex gap-3">
+                <button className="p-4 bg-white/80 hover:bg-white border border-white/30 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group">
+                  <Bell size={20} className="text-slate-600 group-hover:text-emerald-600 transition-colors" />
+                </button>
+                <button className="p-4 bg-white/80 hover:bg-white border border-white/30 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group">
+                  <Settings size={20} className="text-slate-600 group-hover:text-emerald-600 transition-colors" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {stats.map((stat, index) => (
+            <div key={stat.label} className="group relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+              <div className="relative bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl shadow-lg shadow-green-500/5 p-6 hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-500 group-hover:scale-105">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 bg-gradient-to-r from-${stat.color}-500/10 to-${stat.color}-600/10 rounded-xl`}>
+                    <stat.icon size={24} className={`text-${stat.color}-600`} />
+                  </div>
+                  <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                    <TrendingUp size={12} />
+                    {stat.trend}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-3xl font-black text-slate-800">{stat.value}</div>
+                  <div className="text-sm text-slate-600">{stat.label}</div>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400/20 to-green-400/20 rounded-b-2xl scale-x-0 group-hover:scale-x-100 transition-transform duration-700"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Wallet Quick Access Card */}
+        <div className="flex justify-center mb-8">
+          <button
+            onClick={() => navigate('/wallet')}
+            className="flex items-center gap-4 px-8 py-4 bg-gradient-to-r from-green-400 via-white to-emerald-500 text-emerald-900 font-bold rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 border-2 border-emerald-100 hover:border-emerald-400"
+            title="View Wallet"
+            style={{
+              background: 'linear-gradient(90deg, #bbf7d0 0%, #fff 50%, #34d399 100%)',
+            }}
+          >
+            <Wallet size={28} className="mr-2 text-emerald-700" />
+            <span className="text-lg font-semibold">Wallet Balance:</span>
+            <span className="ml-2 text-2xl font-black text-emerald-700">{stats[2]?.value || '₹0'}</span>
           </button>
         </div>
 
-        {/* Enhanced Profile Info */}
-        <div className="relative -mt-24 px-8 z-10">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col lg:flex-row lg:items-end gap-10">
-              <div className="relative group">
-                <div className="w-48 h-48 rounded-3xl border-4 border-white shadow-2xl overflow-hidden bg-white transform transition-all duration-700 group-hover:scale-105 group-hover:rotate-2">
-                  <img
-                    src={userInfo.profilePic}
-                    alt="Profile"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        {/* Navigation Tabs */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl shadow-lg p-2">
+            <div className="flex gap-2">
+              {['profile', 'settings'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-8 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-300 ${
+                    activeTab === tab
+                      ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/25'
+                      : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50'
+                  }`}
+                >
+                  {tab}
+            </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'profile' && (
+          <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl shadow-green-500/5 p-8 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent"></div>
+            
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                <User size={24} />
+                Personal Information
+              </h2>
+              <button
+                onClick={isEditing ? handleSave : handleEdit}
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : isEditing ? (
+                  <Save size={18} />
+                ) : (
+                  <Edit3 size={18} />
+                )}
+                {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Edit Profile'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Name Field */}
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-700 uppercase tracking-wider">
+                  <User size={16} />
+                  Full Name
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={userInfo.name}
+                    onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
+                    className="w-full px-4 py-4 bg-white/80 border border-white/30 rounded-xl text-slate-800 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 transition-all duration-300"
+                    placeholder="Enter your full name"
                   />
-                </div>
-                <button className="absolute -bottom-3 -right-3 p-4 bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl hover:from-emerald-600 hover:to-green-700 transition-all duration-500 shadow-2xl hover:shadow-emerald-500/25 group transform hover:-translate-y-1 hover:scale-110">
-                  <Camera size={20} className="text-white group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
-                </button>
+                ) : (
+                  <div className="px-4 py-4 bg-gradient-to-r from-emerald-50/50 to-green-50/50 border border-emerald-100 rounded-xl text-slate-800 font-medium">
+                    {userInfo.name || 'Not provided'}
+                  </div>
+                )}
               </div>
-              
-              <div className="flex-1 pb-10">
-                <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-10 border border-white/50 shadow-2xl hover:shadow-3xl transition-all duration-700 transform hover:-translate-y-1">
-                  <h1 className="text-5xl font-bold text-gray-900 mb-4 hover:text-emerald-600 transition-colors duration-500">{userInfo.name}</h1>
-                  <p className="text-gray-600 mb-6 text-xl leading-relaxed hover:text-gray-700 transition-colors duration-300">{userInfo.bio}</p>
-                  <div className="flex flex-wrap items-center gap-4">
-                    <span className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm font-bold rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
-                      Premium Member
-                    </span>
-                    <span className="px-6 py-3 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full hover:bg-gray-200 hover:scale-105 transition-all duration-300">
-                      Member since {userInfo.joinDate}
-                    </span>
-                    <span className="px-6 py-3 bg-yellow-100 text-yellow-700 text-sm font-semibold rounded-full flex items-center gap-2 hover:bg-yellow-200 hover:scale-105 transition-all duration-300">
-                      <Star size={16} className="fill-current animate-pulse" />
-                      Verified Buyer
-                    </span>
+
+              {/* Email Field */}
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-700 uppercase tracking-wider">
+                  <Mail size={16} />
+                  Email Address
+                </label>
+                <div className="px-4 py-4 bg-gradient-to-r from-slate-50 to-slate-100/50 border border-slate-200 rounded-xl text-slate-600 font-medium relative">
+                  {userInfo.email}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                   </div>
                 </div>
               </div>
+
+              {/* Phone Field */}
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-700 uppercase tracking-wider">
+                  <Phone size={16} />
+                  Phone Number
+                </label>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    value={userInfo.phone}
+                    onChange={(e) => setUserInfo({ ...userInfo, phone: e.target.value })}
+                    className="w-full px-4 py-4 bg-white/80 border border-white/30 rounded-xl text-slate-800 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 transition-all duration-300"
+                    placeholder="Enter your phone number"
+                  />
+                ) : (
+                  <div className="px-4 py-4 bg-gradient-to-r from-emerald-50/50 to-green-50/50 border border-emerald-100 rounded-xl text-slate-800 font-medium">
+                    {userInfo.phone || 'Not provided'}
+                  </div>
+                )}
+              </div>
+
+              {/* Bio Field */}
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-700 uppercase tracking-wider">
+                  <User size={16} />
+                  Bio
+                </label>
+                {isEditing ? (
+                  <textarea
+                    value={userInfo.bio}
+                    onChange={(e) => setUserInfo({ ...userInfo, bio: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-4 bg-white/80 border border-white/30 rounded-xl text-slate-800 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 transition-all duration-300 resize-none"
+                    placeholder="Tell us about yourself..."
+                  />
+                ) : (
+                  <div className="px-4 py-4 bg-gradient-to-r from-emerald-50/50 to-green-50/50 border border-emerald-100 rounded-xl text-slate-800 font-medium min-h-[80px] flex items-center">
+                    {userInfo.bio || 'No bio provided'}
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="space-y-8">
+            {/* Notifications Settings */}
+            <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl shadow-green-500/5 p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent"></div>
+              
+              <h2 className="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
+                <Bell size={24} />
+                Notification Preferences
+              </h2>
+
+              <div className="space-y-6">
+                {Object.entries(notifications).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between p-6 bg-gradient-to-r from-emerald-50/30 to-green-50/30 border border-emerald-100/50 rounded-2xl hover:shadow-lg transition-all duration-300">
+                    <div className="space-y-1">
+                      <div className="font-bold text-slate-800">
+                        {key === 'orders' ? 'Order Updates' : 
+                         key === 'promotions' ? 'Promotional Offers' : 
+                         key === 'newsletter' ? 'Newsletter & Updates' : 
+                         'Security Alerts'}
+            </div>
+                      <div className="text-sm text-slate-600">
+                        {key === 'orders' ? 'Get notified about order status changes' : 
+                         key === 'promotions' ? 'Receive exclusive deals and offers' : 
+                         key === 'newsletter' ? 'Stay updated with our latest content' : 
+                         'Important security and account notifications'}
+        </div>
+                  </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={value}
+                        onChange={(e) => setNotifications({ ...notifications, [key]: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-green-600 transition-all duration-300 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border after:rounded-full after:h-6 after:w-6 after:transition-all after:duration-300 peer-checked:after:translate-x-7 after:shadow-lg"></div>
+                    </label>
+                  </div>
+            ))}
+          </div>
+        </div>
+
+            {/* Premium Features */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Blooms Coins */}
+              <div className="group bg-gradient-to-br from-yellow-50 to-orange-50 border border-yellow-200/50 rounded-3xl shadow-2xl shadow-yellow-500/5 p-8 relative overflow-hidden hover:scale-105 transition-all duration-500">
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 via-transparent to-orange-400/5 rounded-3xl"></div>
+                <div className="relative">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-lg">
+                      B
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-slate-800">Blooms Coins</h3>
+                      <p className="text-sm text-slate-600">Loyalty Rewards Program</p>
+      </div>
+    </div>
+                  <p className="text-slate-700 mb-6">Earn coins with every purchase and unlock exclusive rewards, discounts, and premium features.</p>
+                  <button className="w-full px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2">
+                    <Zap size={18} />
+                    Coming Soon
+          </button>
+                </div>
+              </div>
+              
+              {/* Blooms Seller */}
+              <div className="group bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200/50 rounded-3xl shadow-2xl shadow-emerald-500/5 p-8 relative overflow-hidden hover:scale-105 transition-all duration-500">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/5 via-transparent to-green-400/5 rounded-3xl"></div>
+                <div className="relative">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                      <ShoppingBag size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-slate-800">Blooms Seller</h3>
+                      <p className="text-sm text-slate-600">Premium Seller Program</p>
+                    </div>
+                  </div>
+                  <p className="text-slate-700 mb-6">Transform into a premium seller with advanced tools, analytics, and priority support to grow your business.</p>
+                  <button className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2">
+                    <TrendingUp size={18} />
+                    Coming Soon
+                  </button>
           </div>
         </div>
       </div>
 
-      {/* Enhanced Navigation */}
-      <div className="sticky top-0 bg-white/90 backdrop-blur-xl border-b border-gray-200/50 z-50 mt-10 shadow-lg">
-        <div className="max-w-7xl mx-auto px-8">
-          <nav className="flex space-x-2 overflow-x-auto py-4">
-            {[
-              { id: 'profile', label: 'Profile', icon: User },
-              { id: 'settings', label: 'Settings', icon: Settings }
-            ].map(({ id, label, icon: Icon }) => (
+            {/* Logout Button */}
+            <div className="flex justify-center">
               <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-4 py-4 px-8 rounded-3xl whitespace-nowrap font-bold transition-all duration-500 transform hover:-translate-y-1 ${
-                  activeTab === id
-                    ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-2xl shadow-emerald-500/25 scale-105'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 hover:shadow-lg hover:scale-105'
-                }`}
+                onClick={handleLogout}
+                className="group px-12 py-4 bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold rounded-2xl shadow-2xl shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 transition-all duration-300 flex items-center gap-3"
               >
-                <Icon size={20} className={activeTab === id ? 'animate-pulse' : ''} />
-                {label}
+                <LogOut size={20} />
+                Logout Account
+                <div className="w-0 group-hover:w-6 overflow-hidden transition-all duration-300">
+                  <ChevronRight size={16} />
+                </div>
               </button>
-            ))}
-          </nav>
         </div>
       </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-8 py-16 relative z-10">
-        {activeTab === 'profile' && renderProfileContent()}
-        {activeTab === 'settings' && renderSettings()}
-      </div>
-
-      {/* Enhanced Floating Logout Button */}
-      <div className="fixed bottom-10 right-10 z-50">
-        <button
-          onClick={handleLogout}
-          className="group flex items-center gap-4 px-8 py-5 bg-gradient-to-r from-red-500 via-red-600 to-red-700 hover:from-red-600 hover:via-red-700 hover:to-red-800 text-white rounded-3xl shadow-2xl transition-all duration-500 hover:shadow-red-500/30 transform hover:-translate-y-2 hover:scale-110"
-        >
-          <LogOut size={24} className="group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
-          <span className="hidden sm:inline font-bold text-lg">Logout</span>
-          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 rounded-3xl transition-opacity duration-500"></div>
-        </button>
+        )}
       </div>
     </div>
+    </Layout>
   );
 };
 

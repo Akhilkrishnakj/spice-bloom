@@ -3,12 +3,13 @@ import {
   CreditCard, MapPin, Check, Loader2, AlertCircle, Smartphone,
   Wallet, Shield, ChevronRight, ArrowLeft, Package
 } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import AddressManager from './AddressMange';
 import Payment from './Payment';
 import OrderSummary from './OrderSummary';
 import axios from 'axios';
-
+import { clearCart } from '../../redux/cartSlice';
+import { useNavigate } from 'react-router-dom';
 const CheckoutPage = () => {
   const cartItems = useSelector((state) => state.cart) || [];
 
@@ -18,6 +19,9 @@ const CheckoutPage = () => {
   const [error, setError] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card');
   const [selectedAddressId, setSelectedAddressId] = useState(null);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -137,8 +141,88 @@ const CheckoutPage = () => {
  const handlePayment = async () => {
   if (!validateForm()) return;
 
+
+const createOrderInBackend = async (paymentDetails = {}) => {
+  console.log("🟢 Payment Method Sending:", selectedPaymentMethod);
+
+  // 🔍 DEBUG: Check cart items structure
+  console.log("🔍 Cart Items Structure:", cartItems);
+  console.log("🔍 First Cart Item:", cartItems[0]);
+  console.log("🔍 First Cart Item Keys:", Object.keys(cartItems[0] || {}));
+
+  try {
+    const payload = {
+      items: cartItems.map((item, index) => {
+        // 🔍 DEBUG: Check each item's _id
+        console.log(`🔍 Item ${index} _id:`, item._id);
+        console.log(`🔍 Item ${index} full object:`, item);
+        
+        return {
+          productId: item._id || item.id || item.productId, // ✅ Try multiple possible fields
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          image: item.image,
+          description: item.description,
+          weight: item.weight,
+          origin: item.origin,
+          category: item.category,
+        };
+      }),
+      shippingAddress: {
+        name: `${formData.firstName} ${formData.lastName}`,
+        street: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zipCode,
+        country: formData.country,
+      },
+      // 🛠 Normalize the method BEFORE using in payload
+      paymentMethod: selectedPaymentMethod === "cod" ? "cod" : "razorpay",
+      subtotal,
+      shipping,
+      tax,
+      total,
+      payment: {
+        ...paymentDetails,
+        payment_method: selectedPaymentMethod,
+        amount: total,
+        currency: 'INR',
+        status: 'paid',
+      },
+    };
+
+    // 🔍 DEBUG: Check final payload
+    console.log("🟡 Sending Payload to Backend:", payload);
+    console.log("🔍 Items in payload:", payload.items);
+
+    // ✅ Validate before sending
+    const hasInvalidItems = payload.items.some(item => !item.productId);
+    if (hasInvalidItems) {
+      console.error("❌ Some items are missing productId!");
+      setError("Cart items are missing product IDs. Please refresh and try again.");
+      return;
+    }
+
+    await axios.post('/api/v1/order/create', payload, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      }
+    });
+
+    dispatch(clearCart());
+    setTimeout(() => {
+      console.log("✅ Navigating to /my-orders");
+      navigate('/my-orders');
+    }, 2000);
+
+  } catch (err) {
+    console.error("Order save error:", err.response?.data || err.message);
+    setError("Order creation failed. Please try again.");
+  }
+};
+
   if (selectedPaymentMethod === 'razorpay') {
-    console.log("🟡 Amount sending to backend:", total);
     try {
       const { data: orderData } = await axios.post('/api/v1/payment/create-order', {
         amount: total.toFixed(2) * 100
@@ -153,7 +237,8 @@ const CheckoutPage = () => {
         order_id: orderData.id,
         handler: function (response) {
           console.log("Razorpay success:", response);
-          setPaymentSuccess(true); // ✅ Show success screen after Razorpay
+          setPaymentSuccess(true);
+          createOrderInBackend(response); // ✅ save order with Razorpay response
         },
         prefill: {
           name: `${formData.firstName} ${formData.lastName}`,
@@ -173,11 +258,11 @@ const CheckoutPage = () => {
     }
 
   } else {
-    // For other payment types (e.g., COD, card, wallet, UPI)
     try {
       setIsProcessing(true);
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Fake wait
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setPaymentSuccess(true);
+      await createOrderInBackend(); // ✅ save order without Razorpay
     } catch {
       setError("Payment failed. Try again.");
     } finally {
@@ -185,6 +270,7 @@ const CheckoutPage = () => {
     }
   }
 };
+
 
   const handleAddressSelect = (address) => {
     setSelectedAddressId(address ? address._id : null);

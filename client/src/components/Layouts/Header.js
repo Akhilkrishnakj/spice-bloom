@@ -19,6 +19,7 @@ const Header = () => {
   const [animate, setAnimate] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (totalItems > 0) {
@@ -81,12 +82,6 @@ const Header = () => {
                 >
                   Dashboard
                 </NavLink>
-                <NavLink
-                  to="/admin/products"
-                  className="text-sm font-medium text-rose-600 hover:text-rose-700 transition-colors duration-200"
-                >
-                 Add Products
-                </NavLink>
               </div>
             )}
           </div>
@@ -126,52 +121,83 @@ const Header = () => {
         </div>
       </nav>
 
-      {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-2xl md:hidden">
-        <div className="grid grid-cols-5 py-2">
+      {/* Mobile nav: Hamburger + Dropdown */}
+      <nav className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-b border-emerald-100/30 py-3 flex items-center justify-between px-4 shadow-lg">
+        <button
+          className="p-2 focus:outline-none"
+          onClick={() => setMobileMenuOpen((open) => !open)}
+          aria-label="Open menu"
+        >
+          <svg className="h-7 w-7 text-emerald-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d={mobileMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
+          </svg>
+        </button>
+        <NavLink 
+          to="/" 
+          className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent hover:from-emerald-700 hover:to-green-700 transition-all duration-300"
+        >
+          Spice Bloom
+        </NavLink>
+        <div className="flex items-center space-x-2">
+          <NavLink to="/cart" className="relative p-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-full transition-all duration-300 group">
+            <ShoppingCart className="h-5 w-5" />
+            {totalItems > 0 && (
+              <span className={`absolute -top-1 -right-1 bg-emerald-600 text-white text-xs font-medium rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center shadow-lg ${animate ? 'animate-bounce' : ''}`}>{totalItems}</span>
+            )}
+          </NavLink>
+          <NavLink to="/wishlist" className="relative p-2 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all duration-300 group">
+            <Heart className="h-5 w-5" />
+            <span className="absolute inset-0 rounded-full bg-rose-100 scale-0 group-hover:scale-100 transition-transform duration-300 -z-10" />
+          </NavLink>
+        </div>
+      </nav>
+      {/* Mobile dropdown menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed top-14 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg shadow-xl border-b border-emerald-100/30 animate-fade-in-down">
+          <div className="flex flex-col py-2 px-4 space-y-2">
           {navigationItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center py-2 px-1 transition-all duration-300 ${
-                  isActive ? 'text-emerald-600' : 'text-gray-500 hover:text-emerald-600'
+                  `flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-all duration-200 ${
+                    isActive ? 'text-emerald-600 bg-emerald-50' : 'text-gray-700 hover:text-emerald-600 hover:bg-emerald-50'
                 }`
               }
+                onClick={() => setMobileMenuOpen(false)}
             >
-              <Icon className="h-5 w-5 mb-1" />
-              <span className="text-xs font-medium">{label}</span>
+                {Icon && <Icon className="h-5 w-5" />}
+                {label}
             </NavLink>
           ))}
-
+            {user?.role === 1 && (
+              <>
           <NavLink
-            to="/cart"
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center py-2 px-1 relative transition-all duration-300 ${
-                isActive ? 'text-emerald-600' : 'text-gray-500 hover:text-emerald-600'
-              }`
-            }
+                  to="/admin/dashboard"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-all duration-200"
+                  onClick={() => setMobileMenuOpen(false)}
           >
-            <ShoppingCart className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Cart</span>
-            {totalItems > 0 && (
-              <span className={`absolute top-0 right-2 bg-emerald-600 text-white text-xs font-medium rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center shadow-lg ${animate ? 'animate-bounce' : ''}`}>
-                {totalItems}
-              </span>
+                  <Shield className="h-5 w-5" /> Admin Dashboard
+                </NavLink>
+              </>
             )}
+            {!user ? (
+              <div className="flex flex-col gap-2 mt-2">
+                <NavLink to="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <button className="w-full text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-base rounded px-3 py-2 transition-all duration-300">Login</button>
+                </NavLink>
+                <NavLink to="/signup" onClick={() => setMobileMenuOpen(false)}>
+                  <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-base rounded px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-300">Sign Up</button>
+                </NavLink>
+              </div>
+            ) : (
+              <NavLink to="/profile" className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all duration-200" onClick={() => setMobileMenuOpen(false)}>
+                <User className="h-5 w-5" /> Profile
           </NavLink>
+            )}
+          </div>
         </div>
-      </nav>
-
-      {/* Admin FAB */}
-      {user?.role === 1 && (
-        <NavLink to="/admin/dashboard" className="fixed bottom-20 right-4 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-full p-3 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 md:hidden group">
-          <Shield className="h-6 w-6" />
-          <span className="absolute -top-2 -left-2 w-3 h-3 bg-rose-400 rounded-full animate-ping" />
-          <span className="absolute -top-2 -left-2 w-3 h-3 bg-rose-500 rounded-full" />
-        </NavLink>
       )}
-
       <div className="h-16 md:h-20" />
     </>
   );

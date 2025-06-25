@@ -13,7 +13,8 @@ const productSchema = new mongoose.Schema({
   },
   quantity: Number,
   shipping: Boolean,
-  images: [String] // Now storing Cloudinary image URLs
+  images: [String], // Now storing Cloudinary image URLs
+  benefits: [String] // Array of product benefits
 });
 
 export default mongoose.model("Product", productSchema);

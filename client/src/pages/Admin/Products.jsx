@@ -16,7 +16,8 @@ const Products = () => {
     description: '',
     images: [],
     category: '',
-    shipping: ''
+    shipping: '',
+    benefits: ''
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,7 +103,8 @@ const Products = () => {
           description: '',
           images: [],
           category: '',
-          shipping: ''
+          shipping: '',
+          benefits: ''
         });
         setPreviewImages([]);
       } else {
@@ -244,6 +246,26 @@ const Products = () => {
                   </div>
                 </div>
 
+                {/* Benefits */}
+                <div className="sm:col-span-6">
+                  <label htmlFor="benefits" className="block text-sm font-medium text-gray-700">
+                    Product Benefits
+                  </label>
+                  <div className="mt-1">
+                    <textarea
+                      id="benefits"
+                      rows={3}
+                      value={formData.benefits}
+                      onChange={(e) => setFormData({...formData, benefits: e.target.value})}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                      placeholder="Enter product benefits (separate with commas)..."
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Separate multiple benefits with commas (e.g., "Rich in antioxidants, Supports digestion, Natural preservative")
+                    </p>
+                  </div>
+                </div>
+
                 {/* Image Upload */}
                 <div className="sm:col-span-6">
                   <div className="flex justify-between items-center">
@@ -322,7 +344,8 @@ const Products = () => {
                         description: '',
                         images: [],
                         category: '',
-                        shipping: ''
+                        shipping: '',
+                        benefits: ''
                       });
                       setPreviewImages([]);
                     }}

@@ -2,19 +2,24 @@ import React from 'react';
 import { Star, ShoppingCart } from 'lucide-react';
 
 const RelatedProducts = ({ products, onProductClick }) => {
+  // Don't render if no products
+  if (!products || products.length === 0) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       <h3 className="text-2xl font-bold text-gray-900">Related Products</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((product) => (
           <div
-            key={product.id}
+            key={product._id}
             className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
-            onClick={() => onProductClick(product.id)}
+            onClick={() => onProductClick(product._id)}
           >
             <div className="aspect-square overflow-hidden">
               <img
-                src={product.image}
+                src={product.images?.[0] || "/default-placeholder.jpg"}
                 alt={product.name}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
@@ -27,14 +32,14 @@ const RelatedProducts = ({ products, onProductClick }) => {
                     <Star
                       key={i}
                       className={`w-4 h-4 ${
-                        i < Math.floor(product.rating)
+                        i < Math.floor(product.rating || 0)
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'text-gray-300'
                       }`}
                     />
                   ))}
                 </div>
-                <span className="text-xs text-gray-500">({product.reviewCount})</span>
+                <span className="text-xs text-gray-500">({product.reviewCount || 0})</span>
               </div>
               <div className="flex items-center justify-between">                
                 <span className="text-lg font-bold text-green-600">₹{(Number(product.price) || 0).toFixed(2)}</span>

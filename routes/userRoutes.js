@@ -1,21 +1,27 @@
+// routes/userRoutes.js
 import express from 'express';
-import User from '../models/userModel.js';
+import { getMe, updateProfile, getUserStats } from '../controllers/userController.js';
 import { requireSignIn } from '../middlewares/authMiddleware.js';
-
+import User from '../models/userModel.js';
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/me', requireSignIn, getMe);
+router.put('/update-profile', requireSignIn, updateProfile);
+router.get('/stats', requireSignIn, getUserStats);
+
+router.get('/profile', requireSignIn, async (req, res) => {
   try {
-    const users = await User.find().select('-password -createdAt -updatedAt');
-    res.json(users);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ message: 'Server Error', error: error.message });
+    const user = await User.findById(req.user._id).select("name email");
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json({
+      name: user.name,
+      email: user.email,
+      initials: user.name?.charAt(0).toUpperCase()
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to get profile" });
   }
 });
-
-// routes/userRoutes.js
-// router.get("/me", requireSignIn, getProfile);
-
 
 export default router;

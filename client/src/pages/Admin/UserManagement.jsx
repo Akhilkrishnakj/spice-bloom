@@ -13,6 +13,7 @@ import {
   ChevronsLeft,
   ChevronsRight
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -23,22 +24,25 @@ const UserManagement = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
 
   // Fetch users from API
-  const fetchUsers = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('/api/v1/user', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setUsers(res.data);
-    } catch (err) {
-      console.error('Failed to fetch users:', err);
-      // You might want to add toast notification here
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchUsers = async () => {
+  try {
+    // Use consistent key - either 'authToken' or 'token' everywhere
+    const token = localStorage.getItem('authToken'); // ✅ You're using 'authToken' here
+    
+    const res = await axios.get('http://localhost:8080/api/v1/admin', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    setUsers(res.data.users);
+  } catch (err) {
+    console.error('Failed to fetch users:', err);
+    toast.error('Failed to load users. Please try again later.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Handle sorting
   const requestSort = (key) => {
@@ -95,21 +99,25 @@ const UserManagement = () => {
     // TODO: Call API to update user role
   };
 
-  const deleteUser = async (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`/api/users/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        setUsers(users.filter(u => u._id !== id));
-      } catch (err) {
-        console.error('Failed to delete user:', err);
-      }
+
+const deleteUser = async (id) => {
+  if (window.confirm("Are you sure you want to delete this user?")) {
+    try {
+      // Fix: Use 'authToken' instead of 'token' for consistency
+      const token = localStorage.getItem('authToken'); // ✅ Changed from 'token' to 'authToken'
+      
+      await axios.delete(`http://localhost:8080/api/v1/admin/users/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setUsers(users.filter(u => u._id !== id));
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+      toast.error('Failed to delete user');
     }
-  };
+  }
+};
 
   // Render sort direction indicator
   const SortIndicator = ({ columnKey }) => {
