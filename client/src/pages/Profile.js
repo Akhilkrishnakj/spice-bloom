@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { getCurrentUser, updateUserProfile, getUserStats } from '../api/user';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layouts/Layout';
+import FullPageLoader from '../components/FullPageLoader';
+import MiniLoader from '../components/MiniLoader';
 
 
 const DEFAULT_PROFILE_IMAGE = 'https://imgs.search.brave.com/d3lvpgl8vJsPCMoI_aQMaWe0MymkSAc4y9KtWcdp-rQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/ZnJlZS12ZWN0b3Iv/Ymx1ZS1jaXJjbGUt/d2l0aC13aGl0ZS11/c2VyXzc4MzcwLTQ3/MDcuanBnP3NlbXQ9/YWlzX2l0ZW1zX2Jv/b3N0ZWQmdz03NDA';
@@ -34,13 +36,8 @@ const ProfilePage = () => {
 
   const navigate = useNavigate();
 
-  // Real stats from API
-  const [stats, setStats] = useState([
-    { label: 'Total Orders', value: '0', icon: ShoppingBag, trend: '+0%', color: 'emerald' },
-    { label: 'Wishlist Items', value: '0', icon: Heart, trend: '+0%', color: 'green' },
-    { label: 'Wallet Balance', value: '$0', icon: Wallet, trend: '+0%', color: 'teal' },
-    { label: 'Reward Points', value: '0', icon: Star, trend: '+0%', color: 'lime' }
-  ]);
+  // Only show wallet as a stat, no orders or wishlist
+  const [wallet, setWallet] = useState('₹0');
 
   const [notifications, setNotifications] = useState({
     orders: true,
@@ -59,13 +56,12 @@ const ProfilePage = () => {
       setLoading(true);
       setError('');
 
-      // Fetch user profile and stats in parallel
+      // Fetch user profile and wallet
       const [userData, statsData] = await Promise.all([
         getCurrentUser(),
         getUserStats()
       ]);
 
-      // Update user info
       setUserInfo({
         name: userData.name || '',
         email: userData.email || '',
@@ -78,15 +74,7 @@ const ProfilePage = () => {
         }) : 'Recently',
         bio: userData.bio || ''
       });
-
-      // Update stats
-      setStats([
-        { label: 'Total Orders', value: statsData.totalOrders?.toString() || '0', icon: ShoppingBag, trend: '+12%', color: 'emerald' },
-        { label: 'Wishlist Items', value: statsData.wishlistCount?.toString() || '0', icon: Heart, trend: '+5%', color: 'green' },
-        { label: 'Wallet Balance', value: `$${statsData.walletBalance || 0}`, icon: Wallet, trend: '+18%', color: 'teal' },
-        { label: 'Reward Points', value: statsData.rewardPoints?.toString() || '0', icon: Star, trend: '+23%', color: 'lime' }
-      ]);
-
+      setWallet(`₹${statsData.walletBalance || 0}`);
     } catch (err) {
       console.error('Error fetching user data:', err);
       setError('Failed to load profile data. Please try again.');
@@ -188,16 +176,7 @@ const ProfilePage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50/30 to-emerald-50/50 flex items-center justify-center">
-        <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8">
-          <div className="flex items-center gap-4">
-            <Loader2 size={32} className="animate-spin text-emerald-600" />
-            <div className="text-xl font-bold text-slate-800">Loading your profile...</div>
-              </div>
-            </div>
-          </div>
-    );
+    return <FullPageLoader />;
   }
 
   return (
@@ -255,7 +234,7 @@ const ProfilePage = () => {
                   {imageUploading && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <div className="flex flex-col items-center gap-2">
-                        <Loader2 size={24} className="animate-spin text-white" />
+                        <MiniLoader size={24} />
                         <span className="text-white text-xs font-medium">Processing...</span>
                     </div>
                     </div>
@@ -312,7 +291,7 @@ const ProfilePage = () => {
                   onChange={handleImageUpload}
                   className="hidden"
                 />
-              </div>
+    </div>
 
               {/* Profile Info */}
               <div className="flex-1 text-center lg:text-left">
@@ -335,6 +314,14 @@ const ProfilePage = () => {
 
               {/* Quick Actions */}
               <div className="flex gap-3">
+                <button
+                  onClick={() => navigate('/my-orders')}
+                  className="p-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2 group"
+                  title="View My Orders"
+                >
+                  <ShoppingBag size={20} className="text-white group-hover:text-yellow-300 transition-colors" />
+                  <span className="font-semibold hidden sm:inline">My Orders</span>
+                </button>
                 <button className="p-4 bg-white/80 hover:bg-white border border-white/30 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group">
                   <Bell size={20} className="text-slate-600 group-hover:text-emerald-600 transition-colors" />
                 </button>
@@ -346,44 +333,18 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {stats.map((stat, index) => (
-            <div key={stat.label} className="group relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
-              <div className="relative bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl shadow-lg shadow-green-500/5 p-6 hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-500 group-hover:scale-105">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 bg-gradient-to-r from-${stat.color}-500/10 to-${stat.color}-600/10 rounded-xl`}>
-                    <stat.icon size={24} className={`text-${stat.color}-600`} />
-                  </div>
-                  <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                    <TrendingUp size={12} />
-                    {stat.trend}
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-3xl font-black text-slate-800">{stat.value}</div>
-                  <div className="text-sm text-slate-600">{stat.label}</div>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400/20 to-green-400/20 rounded-b-2xl scale-x-0 group-hover:scale-x-100 transition-transform duration-700"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Wallet Quick Access Card */}
-        <div className="flex justify-center mb-8">
+        {/* Stats Grid - Only Wallet */}
+        <div className="flex justify-center mb-12">
           <button
             onClick={() => navigate('/wallet')}
-            className="flex items-center gap-4 px-8 py-4 bg-gradient-to-r from-green-400 via-white to-emerald-500 text-emerald-900 font-bold rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 border-2 border-emerald-100 hover:border-emerald-400"
+            className="flex items-center gap-4 px-8 py-6 bg-white/90 backdrop-blur-xl border border-emerald-100 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 hover:border-emerald-400"
             title="View Wallet"
-            style={{
-              background: 'linear-gradient(90deg, #bbf7d0 0%, #fff 50%, #34d399 100%)',
-            }}
           >
-            <Wallet size={28} className="mr-2 text-emerald-700" />
-            <span className="text-lg font-semibold">Wallet Balance:</span>
-            <span className="ml-2 text-2xl font-black text-emerald-700">{stats[2]?.value || '₹0'}</span>
+            <Wallet size={32} className="text-emerald-700" />
+            <div className="flex flex-col items-start">
+              <span className="text-lg font-semibold text-slate-700">Wallet Balance</span>
+              <span className="text-3xl font-black text-emerald-700">{wallet}</span>
+            </div>
           </button>
         </div>
 
@@ -424,7 +385,7 @@ const ProfilePage = () => {
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
-                  <Loader2 size={18} className="animate-spin" />
+                  <MiniLoader size={18} />
                 ) : isEditing ? (
                   <Save size={18} />
                 ) : (

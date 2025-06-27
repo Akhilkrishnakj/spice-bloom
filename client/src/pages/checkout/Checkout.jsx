@@ -144,6 +144,7 @@ const CheckoutPage = () => {
 
 const createOrderInBackend = async (paymentDetails = {}) => {
   console.log("🟢 Payment Method Sending:", selectedPaymentMethod);
+  console.log("🟢 Original Payment Method:", selectedPaymentMethod);
 
   // 🔍 DEBUG: Check cart items structure
   console.log("🔍 Cart Items Structure:", cartItems);
@@ -178,7 +179,8 @@ const createOrderInBackend = async (paymentDetails = {}) => {
         country: formData.country,
       },
       // 🛠 Normalize the method BEFORE using in payload
-      paymentMethod: selectedPaymentMethod === "cod" ? "cod" : "razorpay",
+      paymentMethod: selectedPaymentMethod === "cod" ? "cod" : 
+                    selectedPaymentMethod === "spicebloom_wallet" ? "wallet" : "razorpay",
       subtotal,
       shipping,
       tax,
@@ -195,6 +197,7 @@ const createOrderInBackend = async (paymentDetails = {}) => {
     // 🔍 DEBUG: Check final payload
     console.log("🟡 Sending Payload to Backend:", payload);
     console.log("🔍 Items in payload:", payload.items);
+    console.log("🔍 Final Payment Method:", payload.paymentMethod);
 
     // ✅ Validate before sending
     const hasInvalidItems = payload.items.some(item => !item.productId);

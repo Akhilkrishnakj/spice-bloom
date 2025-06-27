@@ -8,7 +8,8 @@
     "start": "node server.js",
     "server": "nodemon server.js",
     "client": "npm start --prefix ./client",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "migrate": "node utils/migrateOrderStatus.js"
   },
   "keywords": [],
   "author": "",
@@ -27,7 +28,10 @@
     "express-formidable": "^1.2.0",
     "formidable": "^3.5.4",
     "framer-motion": "^12.6.3",
+    "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.515.0",
     "mongoose": "^8.13.2",
     "moongoose": "^0.0.5",
@@ -38,8 +42,11 @@
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.10",
     "razorpay": "^2.9.6",
+    "react-calendar": "^6.0.0",
     "react-hot-toast": "^2.5.2",
+    "recharts": "^3.0.0",
     "slugify": "^1.6.6",
+    "socket.io": "^4.8.1",
     "styled-components": "^6.1.17",
     "twilio": "^5.5.2"
   },

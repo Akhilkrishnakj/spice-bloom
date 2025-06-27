@@ -1,4 +1,7 @@
 import Order from "../models/orderModel.js";
+import User from "../models/userModel.js";
+import { io } from "../server.js";
+import Razorpay from "razorpay";
 
 export const getAllOrders = async (req, res) => {
   try {
@@ -41,13 +44,16 @@ export const updateOrderStatus = async (req, res) => {
       req.params.id,
       { status },
       { new: true }
-    );
+    ).populate("items.productId").populate("buyer", "name email"); // include buyer if needed
+
+    // ✅ Emit to client
+    io.emit("order-status-update", order);
+
     res.json({ success: true, message: "Order status updated", order });
   } catch (err) {
     res.status(500).json({ success: false, message: "Error updating status" });
   }
 };
-
 export const createOrderController = async (req, res) => {
   console.log("🟠 Backend Received Body:", req.body);
 
@@ -82,6 +88,34 @@ export const createOrderController = async (req, res) => {
     const random = Math.floor(Math.random() * 1000).toString().padStart(4, '0');
     const orderNumber = `SPB-${day}${month}-${year}-${random}`;
 
+    // --- WALLET DEDUCTION LOGIC ---
+    if (paymentMethod === 'wallet') {
+      // Find user and check wallet balance
+      const user = await User.findById(buyerId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found.' });
+      }
+      if (user.wallet < total) {
+        return res.status(400).json({ error: 'Insufficient wallet balance.' });
+      }
+      
+      // Deduct amount from user's wallet
+      user.wallet -= total;
+      
+      // Add transaction record
+      user.transactions.push({
+        type: 'purchase',
+        amount: total,
+        description: `Order ${orderNumber}`,
+        orderId: orderNumber,
+        balanceAfter: user.wallet,
+        date: new Date()
+      });
+      
+      await user.save();
+    }
+    // --- END WALLET LOGIC ---
+
     // ✅ Create new order using items directly (they're already in the right format)
     const newOrder = new Order({
       orderNumber,
@@ -97,7 +131,7 @@ export const createOrderController = async (req, res) => {
         ...payment,
         status: payment?.status || (paymentMethod === "cod" ? "paid" : "created"),
       },
-      status: "Processing",
+      status: "processing",
     });
 
     // ✅ Set expiry if COD
@@ -134,7 +168,7 @@ export const returnProductController = async (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    if (order.status !== "Delivered") {
+    if (order.status !== "delivered") {
       return res.status(400).json({ error: "Only delivered orders can be returned" });
     }
 
@@ -153,12 +187,12 @@ export const returnProductController = async (req, res) => {
       return res.status(404).json({ error: "Product not found in order" });
     }
 
-    if (productItem.returnRequest?.status !== "None") {
+    if (productItem.returnRequest?.status !== "none") {
       return res.status(400).json({ error: "Return already requested for this product" });
     }
 
     productItem.returnRequest = {
-      status: "Requested",
+      status: "requested",
       requestedAt: now,
       reason,
     };
@@ -173,6 +207,110 @@ export const returnProductController = async (req, res) => {
   } catch (err) {
     console.error("Return product error:", err);
     res.status(500).json({ error: "Failed to request return" });
+  }
+};
+
+// 🔄 Request Return for delivered order
+export const requestReturn = async (req, res) => {
+  try {
+    const { orderId, itemIndex, reason, description, photos } = req.body;
+    const userId = req.user._id;
+
+    const order = await Order.findById(orderId).populate('buyer');
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Check if user owns this order
+    if (order.buyer._id.toString() !== userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    // Check if order is delivered
+    if (order.status !== 'delivered') {
+      return res.status(400).json({ success: false, message: 'Order must be delivered to request return' });
+    }
+
+    // Check if return window is still open (7 days)
+    const returnWindowExpires = order.delivery.returnWindowExpires;
+    if (returnWindowExpires && new Date() > returnWindowExpires) {
+      return res.status(400).json({ success: false, message: 'Return window has expired' });
+    }
+
+    // Check if item exists and hasn't been returned
+    if (!order.items[itemIndex]) {
+      return res.status(400).json({ success: false, message: 'Invalid item index' });
+    }
+
+    const item = order.items[itemIndex];
+    if (item.returnRequest.status !== 'none') {
+      return res.status(400).json({ success: false, message: 'Return already requested for this item' });
+    }
+
+    // Update item return request
+    item.returnRequest = {
+      status: 'requested',
+      requestedAt: new Date(),
+      reason,
+      description,
+      photos: photos || [],
+    };
+
+    await order.save();
+
+    // Emit socket event for real-time updates
+    if (global.io) {
+      global.io.to(`user_${userId}`).emit('return-request-update', {
+        orderId,
+        itemIndex,
+        returnRequest: item.returnRequest
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Return request submitted successfully',
+      returnRequest: item.returnRequest
+    });
+
+  } catch (error) {
+    console.error('Error requesting return:', error);
+    res.status(500).json({ success: false, message: 'Failed to request return' });
+  }
+};
+
+// 📋 Get user's return requests
+export const getUserReturns = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const orders = await Order.find({
+      buyer: userId,
+      status: 'delivered',
+      'items.returnRequest.status': { $ne: 'none' }
+    }).populate('buyer');
+
+    const returns = [];
+    orders.forEach(order => {
+      order.items.forEach((item, index) => {
+        if (item.returnRequest.status !== 'none') {
+          returns.push({
+            orderId: order._id,
+            orderNumber: order.orderNumber,
+            itemIndex: index,
+            item,
+            returnRequest: item.returnRequest,
+            returnWindowExpires: order.delivery.returnWindowExpires
+          });
+        }
+      });
+    });
+
+    res.json({ success: true, returns });
+
+  } catch (error) {
+    console.error('Error fetching user returns:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch returns' });
   }
 };
 

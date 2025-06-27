@@ -36,6 +36,12 @@ const offerSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product"
     }
+  ],
+  categories: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category"
+    }
   ]
 }, { timestamps: true });
 

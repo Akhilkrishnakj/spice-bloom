@@ -6,7 +6,7 @@ const trackingSteps = [
   { key: 'pending', label: 'Pending', icon: Clock },
   { key: 'processing', label: 'Processing', icon: Package },
   { key: 'shipped', label: 'Shipped', icon: Truck },
-  { key: 'out_for_delivery', label: 'Out for Delivery', icon: Truck },
+  { key: 'out_for_delivery', label: 'Out of Delivery', icon: Truck },
   { key: 'delivered', label: 'Delivered', icon: CheckCircle },
   { key: 'cancelled', label: 'Cancelled', icon: XIcon },
 ];

@@ -1,6 +1,6 @@
 import express from 'express';
 import { isAdmin, requireSignIn } from '../middlewares/authMiddleware.js';
-import { createOrderController, getAllOrders, getOrderById, updateOrderStatus, returnProductController } from '../controllers/orderController.js';
+import { createOrderController, getAllOrders, getOrderById, updateOrderStatus, returnProductController, requestReturn, getUserReturns } from '../controllers/orderController.js';
 import Order from '../models/orderModel.js';
 import { getRecentOrders } from '../controllers/adminOrderController.js';
 
@@ -31,5 +31,9 @@ router.put('/return/:orderId/:productId', requireSignIn, returnProductController
 
 // GET /api/orders/recent
 router.get('/recent',  getRecentOrders)
+
+// 🔄 Return & Refund Routes
+router.post("/return/request", requireSignIn, requestReturn);
+router.get("/returns", requireSignIn, getUserReturns);
 
 export default router;

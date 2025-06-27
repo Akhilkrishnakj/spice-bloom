@@ -18,6 +18,8 @@ import { addToWishlist, removeFromWishlist } from '../redux/wishlistSlice.js';
 import { addToCart } from '../redux/cartSlice.js';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
+import FullPageLoader from '../components/FullPageLoader';
+import MiniLoader from '../components/MiniLoader';
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -418,10 +420,7 @@ const handleAddToCart = (product) => {
           )} */}
 
           {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-              <p className="mt-4 text-gray-600">Loading products...</p>
-            </div>
+            <FullPageLoader />
           ) : error ? (
             <div className="text-center py-12">npm install
 

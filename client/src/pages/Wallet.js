@@ -129,7 +129,7 @@ const Wallet = () => {
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-8">
             <div>
               <p className="text-emerald-600 text-sm font-semibold mb-2 tracking-wide uppercase">Available Balance</p>
-              <h2 className="text-5xl font-black text-slate-900 mb-2 tracking-tight">${balance.toFixed(2)}</h2>
+              <h2 className="text-5xl font-black text-slate-900 mb-2 tracking-tight">₹{balance.toFixed(2)}</h2>
               <div className="flex items-center mt-2 text-emerald-500 font-medium animate-fade-in">
                 <TrendingUp className="h-5 w-5 mr-2" />
                 <span className="text-base">+12.5% this month</span>
@@ -196,41 +196,47 @@ const Wallet = () => {
             ) : (
               transactions.map((transaction) => (
                 <div key={transaction._id} className="p-8 hover:bg-emerald-50/40 transition-colors duration-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div
                         className={`rounded-full p-3 mr-5 shadow-lg ${
-                          transaction.amount > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                        }`}
-                      >
-                        {transaction.amount > 0 ? (
+                          transaction.type === 'deposit' || transaction.type === 'bonus' || transaction.type === 'refund' 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : 'bg-rose-100 text-rose-700'
+                      }`}
+                    >
+                        {transaction.type === 'deposit' || transaction.type === 'bonus' || transaction.type === 'refund' ? (
                           <ArrowDownLeft className="h-5 w-5" />
-                        ) : (
+                      ) : (
                           <ArrowUpRight className="h-5 w-5" />
-                        )}
-                      </div>
-                      <div>
+                      )}
+                    </div>
+                    <div>
                         <p className="font-bold text-slate-800 mb-1">{transaction.description}</p>
                         <p className="text-sm text-emerald-600/80">{formatDate(transaction.date)}</p>
-                      </div>
                     </div>
-                    <div className="text-right">
-                      <p
+                  </div>
+                  <div className="text-right">
+                    <p
                         className={`font-black text-lg ${
-                          transaction.amount > 0 ? 'text-emerald-700' : 'text-rose-600'
+                          transaction.type === 'deposit' || transaction.type === 'bonus' || transaction.type === 'refund'
+                            ? 'text-emerald-700' 
+                            : 'text-rose-600'
+                      }`}
+                    >
+                        {transaction.type === 'deposit' || transaction.type === 'bonus' || transaction.type === 'refund' ? '+' : '-'}₹{Math.abs(transaction.amount).toFixed(2)}
+                    </p>
+                    <div className="flex items-center justify-end mt-1">
+                      <div
+                        className={`w-2 h-2 rounded-full mr-2 ${
+                          transaction.status === 'completed'
+                            ? 'bg-emerald-400'
+                            : 'bg-yellow-400'
                         }`}
-                      >
-                        {transaction.amount > 0 ? '+' : '-'}${transaction.amount.toFixed(2)}
-                      </p>
-                      <div className="flex items-center justify-end mt-1">
-                        <div
-                          className={`w-2 h-2 rounded-full mr-2 ${
-                            transaction.status === 'completed'
-                              ? 'bg-emerald-400'
-                              : 'bg-yellow-400'
-                          }`}
-                        />
-                        <span className="text-xs text-emerald-500 capitalize font-semibold">{transaction.status}</span>
+                      />
+                        <span className="text-xs text-emerald-500 capitalize font-semibold">
+                          {transaction.type === 'deposit' || transaction.type === 'bonus' || transaction.type === 'refund' ? 'credited' : 'debited'}
+                        </span>
                       </div>
                     </div>
                   </div>

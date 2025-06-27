@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   Home, Package, ShoppingCart, Users, Percent, LogOut, Menu, X, Search,
-  Bell, TrendingUp, Calendar, DollarSign, MoreHorizontal, Eye,
+  Bell, TrendingUp, Calendar as CalendarIcon, DollarSign, MoreHorizontal, Eye,
   Filter, Download, ChevronRight, Activity, ArrowUpRight, Settings,
-  AlertCircle, RefreshCw
+  AlertCircle, RefreshCw, Star, TrendingDown, TrendingUp as TrendingUpIcon, User, CheckCircle, XCircle
 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid } from 'recharts';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
+import ReactApexChart from 'react-apexcharts';
 
 // Custom gradient text component
 const GradientText = ({ children, from, to }) => (
@@ -129,7 +133,19 @@ const apiService = {
     } catch (err) {
       console.error("Error fetching users:", err);
     }
-  }
+  },
+
+  async getSalesTrend(period = 'week') {
+    const response = await fetch(`/api/v1/dashboard/sales-trend?period=${period}`);
+    if (!response.ok) throw new Error('Failed to fetch sales trend');
+    return await response.json();
+  },
+
+  async getNewUsersTrend(period = 'week') {
+    const response = await fetch(`${API_BASE_URL}/dashboard/new-users-trend?period=${period}`);
+    if (!response.ok) throw new Error('Failed to fetch new users trend');
+    return await response.json();
+  },
 };
 
 function App() {
@@ -145,15 +161,22 @@ function App() {
   const [userProfile, setUserProfile] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [calendarData, setCalendarData] = useState(null);
+  const [activeNav, setActiveNav] = useState('dashboard');
+  const [salesTrendData, setSalesTrendData] = useState([]);
+  const [period, setPeriod] = useState('week');
+  const [newUsersPeriod, setNewUsersPeriod] = useState('week');
+  const [newUsersTrend, setNewUsersTrend] = useState([]);
 
   // Sidebar links configuration
   const sidebarLinks = [
-    { title: 'Dashboard', icon: Home, path: '/admin/dashboard', key: 'dashboard' },
-    { title: 'Products', icon: Package, path: '/admin/products-manage', key: 'products' },
-    { title: 'Orders', icon: ShoppingCart, path: '/admin/orders', key: 'orders' },
-    { title: 'Users', icon: Users, path: '/admin/users', key: 'users' },
-    { title: 'Offers', icon: Percent, path: '/admin/offers', key: 'offers' },
-    { title: 'Settings', icon: Settings, path: '/admin/settings', key: 'settings' }
+    { title: 'Dashboard', icon: Home, key: 'dashboard', path: '/admin/dashboard' },
+    { title: 'Products', icon: Package, key: 'products', path: '/admin/products-manage' },
+    { title: 'Users', icon: Users, key: 'users', path: '/admin/users' },
+    { title: 'Orders', icon: ShoppingCart, key: 'orders', path: '/admin/orders' },
+    { title: 'Offers', icon: Percent, key: 'offers', path: '/admin/offers' },
+    { title: 'Settings', icon: Settings, key: 'settings', path: '/admin/settings' },
   ];
 
   // Fetch all data
@@ -192,6 +215,34 @@ function App() {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Number formatter for large values
+  const formatNumber = (num) => num >= 1000 ? (num/1000).toFixed(1) + 'k' : num;
+
+  // Fetch sales trend data
+  const fetchSalesTrend = async () => {
+    try {
+      let url = `/api/v1/dashboard/sales-trend?period=${period}`;
+      if (selectedDate && period === 'day') {
+        url += `&date=${selectedDate}`;
+      }
+      const data = await fetch(url).then(res => res.json());
+      setSalesTrendData(data);
+    } catch (err) {
+      setSalesTrendData([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchSalesTrend();
+    const interval = setInterval(fetchSalesTrend, 15000);
+    return () => clearInterval(interval);
+  }, [period, selectedDate]);
+
+  // Debug: log the data being passed to the chart
+  useEffect(() => {
+    console.log('Sales Trend Data:', salesTrendData);
+  }, [salesTrendData]);
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -263,6 +314,168 @@ function App() {
 
   const unreadNotifications = notifications.filter(n => !n.read).length;
 
+  // --- Calendar click handler ---
+  const handleCalendarChange = (date) => {
+    const iso = date.toISOString().slice(0, 10);
+    setSelectedDate(iso);
+    setPeriod('day');
+    setNewUsersPeriod('day');
+  };
+
+  // When period changes away from 'day', clear selectedDate
+  useEffect(() => {
+    if (period !== 'day' && selectedDate) setSelectedDate(null);
+  }, [period]);
+  useEffect(() => {
+    if (newUsersPeriod !== 'day' && selectedDate) setSelectedDate(null);
+  }, [newUsersPeriod]);
+
+  // --- Status badge color ---
+  const statusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'delivered': return 'bg-emerald-100 text-emerald-700';
+      case 'processing': return 'bg-indigo-100 text-indigo-700';
+      case 'shipped': return 'bg-blue-100 text-blue-700';
+      case 'cancelled': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  // Prepare data for ApexCharts
+  const salesData = salesTrendData && salesTrendData.length > 0 ? salesTrendData : [];
+
+  // Extract series and categories
+  const series = [{
+    name: "Sales",
+    data: salesData.map(d => d.sales)
+  }];
+  const categories = salesData.map(d => d.date);
+
+  // Determine line color: green if up, red if down
+  const getLineColor = () => {
+    if (series[0].data.length < 2) return "#10B981"; // default green
+    return series[0].data[series[0].data.length - 1] >= series[0].data[series[0].data.length - 2]
+      ? "#10B981" // green
+      : "#EF4444"; // red
+  };
+
+  // Latest value for horizontal line
+  const latestValue = series[0].data[series[0].data.length - 1];
+
+  // ApexCharts options
+  const chartOptions = {
+    chart: {
+      type: 'line',
+      height: 220,
+      toolbar: { show: false },
+      zoom: { enabled: false },
+      animations: { enabled: true, easing: 'easeinout', speed: 800 },
+    },
+    stroke: {
+      curve: 'smooth',
+      width: 4,
+      colors: [getLineColor()],
+    },
+    xaxis: {
+      categories,
+      labels: { style: { colors: "#4B0082", fontWeight: 600 } }
+    },
+    yaxis: {
+      labels: { style: { colors: "#10B981", fontWeight: 600 } }
+    },
+    tooltip: {
+      theme: 'light',
+      y: { formatter: val => `₹${val}` }
+    },
+    grid: {
+      borderColor: "#E5E7EB",
+      strokeDashArray: 4,
+    },
+    markers: {
+      size: 6,
+      colors: [getLineColor()],
+      strokeColors: "#fff",
+      strokeWidth: 2,
+      hover: { size: 8 }
+    },
+    annotations: {
+      yaxis: latestValue !== undefined ? [
+        {
+          y: latestValue,
+          borderColor: '#EF4444',
+          label: {
+            borderColor: '#EF4444',
+            style: { color: '#fff', background: '#EF4444' },
+            text: `Latest: ₹${latestValue}`,
+          }
+        }
+      ] : []
+    }
+  };
+
+  // Fetch new users trend data
+  const fetchNewUsersTrend = async () => {
+    try {
+      let url = `/api/v1/dashboard/new-users-trend?period=${newUsersPeriod}`;
+      if (selectedDate && newUsersPeriod === 'day') {
+        url += `&date=${selectedDate}`;
+      }
+      const data = await fetch(url).then(res => res.json());
+      setNewUsersTrend(data);
+    } catch (err) {
+      setNewUsersTrend([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchNewUsersTrend();
+    const interval = setInterval(fetchNewUsersTrend, 15000);
+    return () => clearInterval(interval);
+  }, [newUsersPeriod, selectedDate]);
+
+  // ECG-style ApexChart for new users
+  const newUsersSeries = [{
+    name: 'New Users',
+    data: newUsersTrend.map(d => d.count)
+  }];
+  const newUsersCategories = newUsersTrend.map(d => d.date);
+  const newUsersChartOptions = {
+    chart: {
+      type: 'line',
+      height: 120,
+      sparkline: { enabled: true },
+      animations: { enabled: true, easing: 'linear', speed: 900 },
+    },
+    stroke: {
+      curve: 'stepline', // ECG/jagged look
+      width: 3,
+      colors: ['#10B981'],
+    },
+    xaxis: {
+      categories: newUsersCategories,
+      labels: { show: false },
+      axisTicks: { show: false },
+      axisBorder: { show: false },
+    },
+    yaxis: {
+      show: false,
+    },
+    tooltip: {
+      theme: 'light',
+      y: { formatter: val => `${val} users` }
+    },
+    grid: {
+      show: false,
+    },
+    markers: {
+      size: 4,
+      colors: ['#10B981'],
+      strokeColors: '#fff',
+      strokeWidth: 2,
+      hover: { size: 6 }
+    },
+  };
+
   if (loading && !stats.length) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -280,279 +493,178 @@ function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 relative">
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
+    <div className="min-h-screen bg-white flex">
       {/* Sidebar */}
-      <aside className={`fixed lg:static z-50 w-72 h-screen bg-white border-r border-gray-200 shadow-xl lg:shadow-sm transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-50/20 to-transparent pointer-events-none" />
-        
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex justify-center items-center text-white shadow">
-                <Package className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="font-bold text-green-800">Spice Mart</p>
-                <p className="text-xs text-gray-500">Admin Panel</p>
-              </div>
-            </div>
-            <button 
-              className="lg:hidden p-1 rounded-md hover:bg-gray-100"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
+      <aside className={`fixed z-40 lg:static w-64 h-full bg-white border-r border-gray-100 shadow-xl transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <span className="text-2xl font-extrabold text-emerald-600 tracking-tight">Spice Bloom </span>
+          <button className="lg:hidden p-2" onClick={() => setSidebarOpen(false)}><X className="w-6 h-6 text-gray-500" /></button>
         </div>
-        
-        <nav className="flex-1 p-2 overflow-y-auto h-[calc(100vh-180px)]">
+        <nav className="flex-1 p-2">
           {sidebarLinks.map(link => (
-            <a 
-              href={link.path} 
-              key={link.title}
-              className="flex items-center justify-between p-3 mb-1 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 group text-sm lg:text-base"
+            <a
+              key={link.key}
+              href={link.path}
+              onClick={() => setActiveNav(link.key)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-1 font-medium transition-all duration-200 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 ${activeNav === link.key ? 'bg-gradient-to-r from-emerald-100 to-indigo-100 text-emerald-700 shadow' : ''}`}
             >
-              <div className="flex items-center space-x-3">
-                <div className="p-1.5 rounded-md bg-gray-50 group-hover:bg-white group-hover:shadow-sm">
-                  <link.icon className="w-4 h-4 text-gray-500 group-hover:text-blue-600" />
-                </div>
-                <span className="text-sm font-medium">{link.title}</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                {sidebarData[link.key] && (
-                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
-                    {sidebarData[link.key]}
-                  </span>
-                )}
-              </div>
+              <link.icon className={`w-5 h-5 ${activeNav === link.key ? 'text-emerald-600' : 'text-gray-400'}`} />
+              <span>{link.title}</span>
             </a>
           ))}
-        </nav>
-        
-        <div className="p-4 border-t border-gray-100 bg-white">
-          <button 
-            className="flex items-center w-full p-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-lg transition-colors duration-200" 
-            onClick={handleLogout}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            <span>Logout</span>
+          <button className="flex items-center gap-3 px-4 py-3 rounded-lg mt-6 font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 w-full" onClick={handleLogout}>
+            <LogOut className="w-5 h-5 text-gray-400" /> Logout
           </button>
-        </div>
+        </nav>
       </aside>
-
-      {/* Content */}
-      <div className="flex-1 flex flex-col lg:ml-72 min-w-0">
-        <header className="sticky top-0 bg-white border-b border-gray-200 z-30 px-2 sm:px-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-3 sm:gap-0">
-            <div className="flex items-center">
-              <button 
-                className="lg:hidden p-2 mr-2 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="w-5 h-5 text-gray-600" />
-              </button>
-              <div className="relative w-full sm:max-w-md sm:ml-4 mt-2 sm:mt-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input 
-                  type="text" 
-                  placeholder="Search..." 
-                  value={searchQuery}
-                  onChange={handleSearch}
-                  className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-white" 
-                />
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <button className="p-2 rounded-full hover:bg-gray-100 relative transition-colors duration-200">
-                <Bell className="w-5 h-5 text-gray-500" />
-                {unreadNotifications > 0 && (
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                )}
-              </button>
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium text-sm cursor-pointer hover:bg-gray-300 transition-colors duration-200">
-                <span>{userProfile?.initials || 'AD'}</span>
-              </div>
-            </div>
+      {/* Overlay for mobile */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="sticky top-0 z-20 bg-white/90 border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <button className="lg:hidden p-2 rounded-md hover:bg-emerald-50" onClick={() => setSidebarOpen(true)}><Menu className="w-6 h-6 text-emerald-600" /></button>
+            <h1 className="text-xl font-bold text-emerald-700 tracking-tight">Admin Dashboard</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <CalendarIcon className="w-5 h-5 text-indigo-600" />
+            <span className="text-sm text-gray-600 font-medium">{selectedDate ? selectedDate : new Date().toLocaleDateString()}</span>
+            <User className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 p-1" />
           </div>
         </header>
-
-        <main className="p-3 sm:p-4 md:p-5 overflow-x-hidden">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
-            <div className="mb-4 sm:mb-0">
-              <h1 className="text-xl font-semibold text-gray-800">Dashboard Overview</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Welcome back{userProfile?.name ? `, ${userProfile.name}` : ''}! Here's what's happening with your store.
-              </p>
-            </div>
-            <div className="flex space-x-2 w-full sm:w-auto">
-              <button className="px-3 py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-1.5 w-full sm:w-auto justify-center">
-                <Filter className="w-3.5 h-3.5" />
-                <span>Filter</span>
-              </button>
-              <button 
-                onClick={handleExport}
-                className="px-3 py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-1.5 w-full sm:w-auto justify-center"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Export</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
-            {stats.map((stat, index) => (
-              <div 
-                key={stat.id || index} 
-                className="group bg-white p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md border border-gray-100 hover:border-transparent transition-all duration-200 hover:-translate-y-0.5 overflow-hidden relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-5 transition-opacity duration-500" />
-                
-                <div className="relative z-10">
-                  <div className="flex justify-between items-start">
-                    <div className={`p-2.5 ${stat.lightColor || 'bg-gray-50'} rounded-xl shadow-inner`}>
-                      {stat.icon ? (
-                        <stat.icon className={`${stat.iconColor || 'text-gray-600'} w-5 h-5`} />
-                      ) : (
-                        <Activity className="w-5 h-5 text-gray-600" />
-                      )}
-                    </div>
-                    <span className="text-xs font-medium bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 px-2.5 py-1 rounded-full flex items-center">
-                      <TrendingUp className="w-3 h-3 mr-1" />
-                      {stat.trend || '+0%'}
-                    </span>
-                  </div>
-                  <div className="mt-5">
-                    <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                    <p className="text-2xl font-bold mt-1 bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                      {stat.value}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1.5">{stat.description}</p>
-                  </div>
+        {/* Main Grid */}
+        <main className="flex-1 p-4 md:p-8 bg-white/90">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            {/* Sales Chart (large) */}
+            <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-emerald-100 p-6 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-emerald-700">Sales Growth</h2>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={period}
+                    onChange={e => setPeriod(e.target.value)}
+                    className="text-xs px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  >
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                    <option value="day">Daily</option>
+                  </select>
+                  {selectedDate && period === 'day' && (
+                    <span className="text-xs text-emerald-700 font-semibold">{selectedDate}</span>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Recent Orders Table */}
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-md mt-4 sm:mt-0">
-            <div className="p-3 sm:p-4 border-b border-gray-100">
-              <h2 className="text-lg font-medium text-gray-800">Recent Orders</h2>
-              <p className="text-sm text-gray-500 mt-1">Latest transactions from your store</p>
+              <ResponsiveContainer width="100%" height={220}>
+                <ReactApexChart
+                  options={chartOptions}
+                  series={series}
+                  type="line"
+                  height={220}
+                />
+              </ResponsiveContainer>
             </div>
-            
-            {loading && !recentOrders.length ? (
-              <LoadingSpinner />
-            ) : error && !recentOrders.length ? (
-              <ErrorMessage message="Failed to load recent orders" onRetry={fetchData} />
-            ) : recentOrders.length === 0 ? (
-              <div className="p-8 text-center">
-                <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No recent orders found</p>
+            {/* New Users Chart (ECG style) */}
+            <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-emerald-700">New Users</h2>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={newUsersPeriod}
+                    onChange={e => setNewUsersPeriod(e.target.value)}
+                    className="text-xs px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  >
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                    <option value="day">Daily</option>
+                  </select>
+                  {selectedDate && newUsersPeriod === 'day' && (
+                    <span className="text-xs text-emerald-700 font-semibold">{selectedDate}</span>
+                  )}
+                </div>
               </div>
-            ) : (
-              <div className="overflow-x-auto -mx-2 sm:mx-0">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="text-right p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              {newUsersTrend.length > 0 ? (
+                <ReactApexChart
+                  options={newUsersChartOptions}
+                  series={newUsersSeries}
+                  type="line"
+                  height={120}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-24 text-gray-400 text-sm">No data available</div>
+              )}
+            </div>
+          </div>
+          {/* Calendar & Recent Orders */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Calendar Widget */}
+            <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6 flex flex-col items-center">
+              <h2 className="text-lg font-bold text-emerald-700 mb-4">Calendar</h2>
+              <Calendar
+                onChange={handleCalendarChange}
+                value={selectedDate ? new Date(selectedDate) : new Date()}
+                className="rounded-xl border-emerald-200 shadow"
+                tileClassName={({ date, view }) =>
+                  view === 'month' && date.toISOString().slice(0, 10) === selectedDate
+                    ? 'bg-emerald-100 text-emerald-700 font-bold' : ''
+                }
+              />
+              <div className="mt-4 w-full text-center">
+                <span className="text-sm text-gray-600">{selectedDate ? `Selected: ${selectedDate}` : `Today: ${new Date().toLocaleDateString()}`}</span>
+              </div>
+            </div>
+            {/* Recent Orders Table */}
+            <div className="md:col-span-2 bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-emerald-700">Recent Orders</h2>
+                <button
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-indigo-600 text-white rounded-lg font-semibold shadow hover:from-emerald-600 hover:to-indigo-700 transition"
+                  onClick={() => window.location.href = '/admin/orders'}
+                >
+                  View All
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-emerald-50">
+                      <th className="p-3 text-left font-semibold text-emerald-700">Order</th>
+                      <th className="p-3 text-left font-semibold text-emerald-700">Customer</th>
+                      <th className="p-3 text-left font-semibold text-emerald-700">Total</th>
+                      <th className="p-3 text-left font-semibold text-emerald-700">Status</th>
+                      <th className="p-3 text-left font-semibold text-emerald-700">Date</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {recentOrders.map((order) => (
-                      <tr 
-                        key={order.id} 
-                        className="bg-white hover:bg-gray-50 transition-colors duration-150"
-                      >
-                        <td className="px-4 py-3 sm:py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          <span className="font-mono">{order.orderNumber || order.id}</span>
-                        </td>
-                        <td className="px-4 py-3 sm:py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium text-xs shadow-sm">
-                              {order.customer?.initials || order.customer?.name?.charAt(0) || 'U'}
-                            </div>
-                            <div className="ml-2 sm:ml-3">
-                              <div className="text-sm font-medium text-gray-900">{order.customer?.name || 'Unknown'}</div>
-                              {order.customer?.email && (
-                                <div className="text-xs text-gray-500">{order.customer.email}</div>
-                              )}
-                            </div>
+                  <tbody>
+                    {recentOrders.slice(0, 5).map((order) => (
+                      <tr key={order.id} className="border-b last:border-b-0 hover:bg-emerald-50/40 transition">
+                        <td className="p-3 font-mono">{order.id}</td>
+                        <td className="p-3">
+                          <div>
+                            <div className="font-semibold">{order.customer?.name || order.customer}</div>
+                            {order.customer?.email && (
+                              <div className="text-xs text-gray-500">{order.customer.email}</div>
+                            )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 sm:py-4 whitespace-nowrap">
-                          <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
-                            {order.status}
-                          </span>
+                        <td className="p-3 font-bold text-emerald-700">₹{order.total}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColor(order.status)}`}>{order.status}</span>
                         </td>
-                        <td className="px-4 py-3 sm:py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {order.total}
-                        </td>
-                        <td className="px-4 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1.5 text-gray-400 flex-shrink-0" />
-                            <span>{new Date(order.createdAt || order.date).toLocaleDateString()}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-1 sm:space-x-2">
-                            <button 
-                              onClick={() => window.location.href = `/admin/orders/${order.id}`}
-                              className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors duration-200">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
+                        <td className="p-3">{new Date(order.date).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            )}
-            
-            {/* Table Footer */}
-            {recentOrders.length > 0 && (
-              <div className="bg-gray-50 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 border-t border-gray-100">
-                <div className="text-xs sm:text-sm text-gray-500">
-                  Showing <span className="font-medium">1</span> to <span className="font-medium">{recentOrders.length}</span> of{' '}
-                  <span className="font-medium">{recentOrders.length}</span> results
-                </div>
-                <div className="flex space-x-2 w-full sm:w-auto">
-                  <button 
-                    disabled
-                    className="px-3 py-1.5 text-xs sm:text-sm rounded-lg border bg-white text-gray-400 cursor-not-allowed w-1/2 sm:w-auto text-center"
-                  >
-                    Previous
-                  </button>
-                  <button className="px-3 py-1.5 text-xs sm:text-sm rounded-lg border bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200 w-1/2 sm:w-auto text-center">
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </main>
       </div>
     </div>
   );
 }
-
 
 export default App;

@@ -7,6 +7,8 @@ import { addToWishlist, removeFromWishlist } from '../redux/wishlistSlice';
 import { addToCart } from '../redux/cartSlice.js';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import FullPageLoader from '../components/FullPageLoader';
+import MiniLoader from '../components/MiniLoader';
 
 const Shop = () => {
   const dispatch = useDispatch();
@@ -79,6 +81,10 @@ const handleWishlistClick = (normalized) => {
     if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
     return a.name.localeCompare(b.name);
   });
+
+  if (products.length === 0) {
+    return <FullPageLoader />;
+  }
 
   return (
     <Layout title={"Shop - Spice Bloom"}>

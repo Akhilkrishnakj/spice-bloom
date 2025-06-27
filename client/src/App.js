@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
 import Home from './pages/Home';
@@ -30,8 +30,20 @@ import ProductDetail from './pages/ProductDetails/ProductDetail';
 import Checkout from './pages/checkout/Checkout';
 import Myorder from './pages/Myorder';
 import Wallet from './pages/Wallet';
+import FullPageLoader from './components/FullPageLoader';
 
 function App() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1500); // 1.5 seconds
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return <FullPageLoader />;
+  }
+
   return (
     
     <AuthProvider>
