@@ -54,7 +54,7 @@ const Orders = () => {
   };
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch =
+      const matchesSearch =
       order.orderNumber?.toLowerCase().includes(search.toLowerCase()) ||
       order.buyer?.name?.toLowerCase().includes(search.toLowerCase()) ||
       order.buyer?.email?.toLowerCase().includes(search.toLowerCase());
@@ -105,7 +105,7 @@ const Orders = () => {
           <div className="flex items-center gap-3">
             <Package className="h-8 w-8 text-green-600" />
             <h1 className="text-3xl font-bold text-green-800 tracking-tight">SpiceBloom Orders</h1>
-          </div>
+                </div>
           <input
             type="text"
             placeholder="Search by order, user, email..."
@@ -114,7 +114,7 @@ const Orders = () => {
             className="px-4 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 bg-white"
             style={{ minWidth: 260 }}
           />
-        </div>
+              </div>
         <div className="bg-white rounded-xl shadow-lg border border-green-100 overflow-x-auto">
           <table className="min-w-full divide-y divide-green-100">
             <thead className="bg-green-50">
@@ -177,9 +177,9 @@ const Orders = () => {
                                   <opt.icon className="w-4 h-4" /> {opt.label}
                                 </button>
                               ))}
-                            </div>
+            </div>
                           )}
-                        </div>
+          </div>
                         <button
                           className="inline-flex items-center px-3 py-2 border border-red-200 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50"
                           onClick={() => setShowDeleteConfirm(order._id)}
@@ -216,9 +216,9 @@ const Orders = () => {
               >Delete</button>
             </div>
           </div>
-        </div>
+                </div>
       )}
-    </div>
+              </div>
   );
 };
 
@@ -268,7 +268,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
           <button onClick={onClose} className="p-2 hover:bg-green-50 rounded-lg">
             <XIcon className="h-5 w-5 text-green-500" />
           </button>
-        </div>
+                </div>
         <div className="p-6 space-y-6">
           {/* Timeline/Stepper */}
           <div className="mb-6">
@@ -301,7 +301,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
                             canChange ? 'text-green-500 group-hover:text-green-700' :
                             'text-gray-400'}
                         `} />
-                      </div>
+              </div>
                       <span className={`mt-2 text-xs font-medium
                         ${isCancelled ? 'text-red-600' :
                           isCompleted ? 'text-green-700' :
@@ -312,7 +312,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
                       {canChange && (
                         <span className="text-[10px] text-green-400 mt-1">Click to set</span>
                       )}
-                    </div>
+              </div>
                     {idx < steps.length - 1 && (
                       <div className={`flex-1 h-1 mx-1 rounded-full
                         ${idx < currentStep ? 'bg-green-400' : 'bg-gray-200'}
@@ -342,7 +342,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
                   >{updatingStatus ? 'Updating...' : 'Change'}</button>
                 </div>
               </div>
-            </div>
+              </div>
           )}
           {/* Order Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

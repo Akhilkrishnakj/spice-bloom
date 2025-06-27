@@ -590,22 +590,33 @@ function App() {
   const handleCancelOrder = async (orderId) => {
     setCancellingOrder(orderId);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setOrders((prev) =>
-        prev.map((order) =>
-          order._id === orderId 
-            ? { 
-                ...order, 
-                status: "cancelled",
-                trackingStages: generateTrackingStages("cancelled")
-              } 
-            : order
-        )
-      );
-      setShowCancelConfirm(null);
+      const token = contextToken || localStorage.getItem('authToken');
+      const { data } = await axios.post('/api/v1/order/cancel', {
+        orderId: orderId,
+        reason: 'Cancelled by user'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (data.success) {
+        toast.success(`Order cancelled successfully! ${data.refundAmount ? `₹${data.refundAmount} refunded to your ${data.order.paymentMethod === 'wallet' ? 'wallet' : 'original payment method'}.` : ''}`);
+        
+        // Update local state with the updated order
+        setOrders((prev) =>
+          prev.map((order) =>
+            order._id === orderId 
+              ? { 
+                  ...data.order, 
+                  trackingStages: generateTrackingStages("cancelled")
+                } 
+              : order
+          )
+        );
+        setShowCancelConfirm(null);
+      }
     } catch (err) {
-      alert("Failed to cancel order. Please try again.");
+      console.error('Error cancelling order:', err);
+      toast.error(err.response?.data?.message || "Failed to cancel order. Please try again.");
     } finally {
       setCancellingOrder(null);
     }

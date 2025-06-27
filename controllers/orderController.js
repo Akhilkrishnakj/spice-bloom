@@ -314,3 +314,130 @@ export const getUserReturns = async (req, res) => {
   }
 };
 
+// 🚫 User: Cancel order with wallet refund
+export const cancelOrder = async (req, res) => {
+  try {
+    const { orderId, reason } = req.body;
+    const userId = req.user._id;
+
+    const order = await Order.findById(orderId).populate('buyer');
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Check if user owns this order
+    if (order.buyer._id.toString() !== userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    // Check if order can be cancelled
+    const cancellableStatuses = ['pending', 'processing', 'shipped', 'out_for_delivery'];
+    if (!cancellableStatuses.includes(order.status.toLowerCase())) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Order cannot be cancelled in ${order.status} status` 
+      });
+    }
+
+    // Update order status
+    order.status = 'cancelled';
+    order.cancelledAt = new Date();
+    order.cancelledBy = userId;
+    order.cancellationReason = reason || 'Cancelled by user';
+
+    // Add to status timeline
+    if (!order.statusTimeline) {
+      order.statusTimeline = [];
+    }
+    order.statusTimeline.push({
+      status: 'cancelled',
+      timestamp: new Date(),
+      notes: `Order cancelled by user: ${reason || 'No reason provided'}`,
+      updatedBy: userId
+    });
+
+    // Process refund based on payment method
+    let refundTransactionId = null;
+    let refundAmount = order.total;
+
+    if (order.paymentMethod === 'wallet') {
+      // Add to user's wallet
+      const user = await User.findById(userId);
+      user.wallet += refundAmount;
+      user.transactions.push({
+        type: 'refund',
+        amount: refundAmount,
+        description: `Order cancellation refund for ${order.orderNumber}`,
+        orderId: order.orderNumber,
+        balanceAfter: user.wallet,
+        date: new Date()
+      });
+      await user.save();
+      refundTransactionId = `wallet_refund_${Date.now()}`;
+    } else if (order.paymentMethod === 'razorpay' && order.payment?.razorpay_payment_id) {
+      // Process Razorpay refund
+      try {
+        const razorpay = new Razorpay({
+          key_id: process.env.RAZORPAY_KEY_ID,
+          key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+
+        const refund = await razorpay.payments.refund(order.payment.razorpay_payment_id, {
+          amount: refundAmount * 100, // Razorpay expects amount in paise
+          speed: 'normal'
+        });
+
+        refundTransactionId = refund.id;
+      } catch (razorpayError) {
+        console.error('Razorpay refund error:', razorpayError);
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Failed to process payment refund. Please contact support.' 
+        });
+      }
+    }
+
+    // Update order with refund info
+    order.returnInfo = {
+      ...order.returnInfo,
+      totalRefundAmount: refundAmount,
+      refundStatus: 'Completed',
+      refundMethod: order.paymentMethod === 'wallet' ? 'Wallet' : 'Original Payment',
+      refundTransactionId: refundTransactionId,
+      refundProcessedAt: new Date(),
+      refundProcessedBy: userId
+    };
+
+    await order.save();
+
+    // Emit socket event for real-time updates
+    if (global.io) {
+      global.io.to(`user_${userId}`).emit('order-status-update', order);
+      global.io.to('admin-room').emit('order-status-update', order);
+    }
+
+    res.json({
+      success: true,
+      message: 'Order cancelled successfully',
+      order,
+      refundAmount,
+      refundTransactionId
+    });
+
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    res.status(500).json({ success: false, message: 'Failed to cancel order' });
+  }
+};
+
+export default {
+  getAllOrders,
+  getOrderById,
+  updateOrderStatus,
+  createOrderController,
+  returnProductController,
+  requestReturn,
+  getUserReturns,
+  cancelOrder
+};
+

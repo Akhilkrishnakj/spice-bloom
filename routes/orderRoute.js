@@ -1,6 +1,6 @@
 import express from 'express';
 import { isAdmin, requireSignIn } from '../middlewares/authMiddleware.js';
-import { createOrderController, getAllOrders, getOrderById, updateOrderStatus, returnProductController, requestReturn, getUserReturns } from '../controllers/orderController.js';
+import { createOrderController, getAllOrders, getOrderById, updateOrderStatus, returnProductController, requestReturn, getUserReturns, cancelOrder } from '../controllers/orderController.js';
 import Order from '../models/orderModel.js';
 import { getRecentOrders } from '../controllers/adminOrderController.js';
 
@@ -26,6 +26,9 @@ router.get("/my-orders", requireSignIn, async (req, res) => {
     res.status(500).json({ success: false, message: "Error fetching user orders" });
   }
 });
+
+// 🚫 User: Cancel order with refund
+router.post("/cancel", requireSignIn, cancelOrder);
 
 router.put('/return/:orderId/:productId', requireSignIn, returnProductController);
 
