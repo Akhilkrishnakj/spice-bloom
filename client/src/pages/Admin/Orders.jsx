@@ -3,6 +3,7 @@ import { Eye, Edit, Trash2, ChevronDown, ChevronUp, CheckCircle, Truck, Clock, X
 import axios from 'axios';
 import socket from '../../socket';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const STATUS_OPTIONS = [
   { key: 'processing', label: 'Processing', color: 'bg-blue-100 text-blue-700', icon: Clock },
@@ -21,6 +22,7 @@ const Orders = () => {
   const [showStatusDropdown, setShowStatusDropdown] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrders();
@@ -101,6 +103,24 @@ const Orders = () => {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Breadcrumb and Back Button Header */}
+        <div className="w-full mb-4">
+          <div className="flex items-center gap-2 md:gap-4 w-full">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              aria-label="Go back"
+            >
+              <ChevronUp className="w-5 h-5 rotate-90" />
+            </button>
+            <nav className="text-sm md:text-base text-emerald-500 font-medium flex items-center gap-1" aria-label="Breadcrumb">
+              <span className="hover:underline cursor-pointer" onClick={() => navigate('/admin/dashboard')}>Admin Dashboard</span>
+              <span className="mx-1 text-emerald-400">/</span>
+              <span className="text-emerald-700 font-semibold">Orders Management</span>
+            </nav>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Package className="h-8 w-8 text-green-600" />

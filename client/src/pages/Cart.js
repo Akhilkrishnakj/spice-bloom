@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layouts/Layout';
 import { useSelector, useDispatch } from 'react-redux';
-import { FaTrash, FaMinus, FaPlus, FaShoppingCart, FaTruck, FaCrown, FaGift, FaShieldAlt } from 'react-icons/fa';
+import { FaTrash, FaMinus, FaPlus, FaShoppingCart, FaTruck, FaCrown, FaGift, FaShieldAlt, FaArrowLeft } from 'react-icons/fa';
 import { addToCart, decreaseQuantity, removeFromCart } from '../redux/cartSlice';
 import { useNavigate } from 'react-router-dom';
 import MiniLoader from '../components/MiniLoader';
@@ -100,6 +100,24 @@ const Cart = () => {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
+          {/* Breadcrumb and Back Button Header */}
+          <div className="w-full mb-6">
+            <div className="flex items-center gap-2 md:gap-4 w-full">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                aria-label="Go back"
+              >
+                <FaArrowLeft className="w-5 h-5" />
+              </button>
+              <nav className="hidden sm:flex text-sm md:text-base text-emerald-500 font-medium items-center gap-1" aria-label="Breadcrumb">
+                <span className="hover:underline cursor-pointer" onClick={() => navigate('/')}>Home</span>
+                <span className="mx-1 text-emerald-400">/</span>
+                <span className="text-emerald-700 font-semibold">Cart</span>
+              </nav>
+            </div>
+          </div>
+
           {/* Header Section */}
           <div className="mb-8">
             <div className="bg-white/80 backdrop-blur-xl border border-emerald-100/40 rounded-3xl shadow-2xl shadow-emerald-200/30 p-8 relative overflow-hidden">

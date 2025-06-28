@@ -14,6 +14,7 @@ import {
   ChevronsRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const MiniLoader = () => (
   <div className="flex justify-center items-center"><span className="inline-block h-4 w-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span></div>
@@ -27,6 +28,7 @@ const UserManagement = () => {
   const [itemsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [actionLoading, setActionLoading] = useState({});
+  const navigate = useNavigate();
 
   // Fetch users from API
   const fetchUsers = async () => {
@@ -164,12 +166,30 @@ const UserManagement = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100 p-4 md:p-8 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto">
+        {/* Breadcrumb and Back Button Header */}
+        <div className="w-full mb-4">
+          <div className="flex items-center gap-2 md:gap-4 w-full">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              aria-label="Go back"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <nav className="text-sm md:text-base text-emerald-500 font-medium flex items-center gap-1" aria-label="Breadcrumb">
+              <span className="hover:underline cursor-pointer" onClick={() => navigate('/admin/dashboard')}>Admin Dashboard</span>
+              <span className="mx-1 text-emerald-400">/</span>
+              <span className="text-emerald-700 font-semibold">User Management System</span>
+            </nav>
+          </div>
+        </div>
+
         <div className="bg-white/80 border border-emerald-100 rounded-2xl shadow-lg overflow-hidden">
           {/* Header */}
           <div className="px-6 py-6 border-b border-emerald-100 backdrop-blur-md">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-extrabold text-emerald-700 tracking-tight">User Management</h1>
+                <h1 className="text-3xl font-extrabold text-emerald-700 tracking-tight">User Management System</h1>
                 <p className="text-emerald-500 mt-1 font-medium">Manage users, roles, and access</p>
               </div>
               <div className="relative w-full md:w-64">

@@ -1,10 +1,16 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import colors from 'colors';
-import dotenv from 'dotenv';
 import morgan from 'morgan';
 import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
+import passport from 'passport';
+import session from 'express-session';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import User from './models/userModel.js';
 
 import connectDB from './config/db.js';
 import { autoCancelUnpaidCOD } from './utils/ autoCancelCOS.js';
@@ -24,10 +30,62 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import notificationRoute from './routes/notificationRoute.js';
 import walletRoute from './routes/walletRoute.js';
 import couponRoute from './routes/couponRoute.js';
+import googleRoute from './routes/googleRoute.js';
 
 // Config dotenv
-dotenv.config();
 console.log("✅ TEST ENV:", process.env.NODEMAILER_EMAIL, process.env.NODEMAILER_PASSWORD);
+
+// Initialize Passport configuration
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: '/api/v1/auth/google/callback',
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Check if user already exists
+        let user = await User.findOne({ email: profile.emails[0].value });
+
+        if (user) {
+          // User exists, return user
+          return done(null, user);
+        }
+
+        // Create new user
+        user = new User({
+          name: profile.displayName,
+          email: profile.emails[0].value,
+          profilePic: profile.photos[0].value,
+          googleId: profile.id,
+          role: 0, // 0 for regular user
+          active: true,
+        });
+
+        await user.save();
+        return done(null, user);
+      } catch (error) {
+        return done(error, null);
+      }
+    }
+  )
+);
+
+// Serialize user for session
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+// Deserialize user from session
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
+});
 
 // Create app
 const app = express();
@@ -94,8 +152,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+// Session configuration for Passport
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true if using HTTPS
+}));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Main Routes
 app.use('/api/v1/auth', authRoute);
+app.use('/api/v1/auth', googleRoute);
 app.use('/api/v1/product', productRoute);
 app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/category', categoryRoute);

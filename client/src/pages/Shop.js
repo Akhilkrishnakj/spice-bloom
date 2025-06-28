@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layouts/Layout';
-import { FaSearch, FaHeart, FaShoppingCart, FaStar, FaFilter } from 'react-icons/fa';
-import { Link } from 'react-router-dom'; // ✅ Added Link import
+import { FaSearch, FaHeart, FaShoppingCart, FaStar, FaFilter, FaArrowLeft } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToWishlist, removeFromWishlist } from '../redux/wishlistSlice';
 import { addToCart } from '../redux/cartSlice.js';
@@ -12,6 +12,7 @@ import MiniLoader from '../components/MiniLoader';
 
 const Shop = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const wishlist = useSelector(state => state.wishlist.items);
   const cart = useSelector(state => state.cart);
 
@@ -46,7 +47,7 @@ const handleWishlistClick = (normalized) => {
     dispatch(addToWishlist({
       id: normalized.id,
       name: normalized.name,
-      img: normalized.image,     // ✅ correctly map
+      img: normalized.image,
       price: normalized.price,
       category: normalized.category
     }));
@@ -61,7 +62,7 @@ const handleWishlistClick = (normalized) => {
       dispatch(addToCart({
       ...product,
       img: product.images?.[0] || "/default-placeholder.jpg", 
-      id: product._id || product.id // ✅ ensure id is consistent
+      id: product._id || product.id
     }));
     toast.success("Item added to cart!");
     }
@@ -105,6 +106,17 @@ const handleWishlistClick = (normalized) => {
               Premium spices & blends for authentic flavors
             </p>
           </div>
+        </div>
+
+        {/* ✅ Simple Back Button */}
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
+          >
+            <FaArrowLeft className="text-sm" />
+            Back
+          </button>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -192,6 +204,13 @@ const handleWishlistClick = (normalized) => {
 
             {/* Products Grid */}
             <div className="flex-1">
+              {/* ✅ Products Count */}
+              <div className="mb-6">
+                <div className="text-gray-600">
+                  <span className="font-semibold text-green-600">{sortedProducts.length}</span> products found
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {sortedProducts.map(product => (
                   <div

@@ -9,6 +9,7 @@ import {
   History,
   TrendingUp,
   DollarSign,
+  ArrowLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layouts/Layout';
@@ -95,6 +96,26 @@ const Wallet = () => {
       {/* Header */}
       <header className="bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600 shadow-lg border-b-0">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumb and Back Button Header */}
+          <div className="pt-4 pb-2">
+            <div className="flex items-center gap-2 md:gap-4 w-full justify-start">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <nav className="hidden sm:flex text-sm md:text-base text-white font-medium items-center gap-1" aria-label="Breadcrumb">
+                <span className="hover:text-emerald-800 hover:bg-white/20 px-2 py-1 rounded cursor-pointer transition-all duration-300" onClick={() => navigate('/')}>Home</span>
+                <span className="mx-1 text-white/80">/</span>
+                <span className="hover:text-emerald-800 hover:bg-white/20 px-2 py-1 rounded cursor-pointer transition-all duration-300" onClick={() => navigate('/profile')}>Profile</span>
+                <span className="mx-1 text-white/80">/</span>
+                <span className="text-white font-semibold bg-white/10 px-2 py-1 rounded">Wallet</span>
+              </nav>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
               <div className="bg-emerald-500 p-2 rounded-lg">

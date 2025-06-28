@@ -5,7 +5,7 @@ import {
   Search, Filter, Package, Truck, CheckCircle, Clock, X, ChevronDown, ChevronUp,
   RotateCcw, Phone, Star, Download, Eye, Calendar, MapPin, CreditCard, FileText, ShoppingBag,
   Navigation, Home, Store, Car, Users, AlertCircle, Zap, ArrowRight, PlayCircle, PauseCircle,
-  RefreshCw, RotateCcw as ReturnIcon, DollarSign, CheckCircle2, XCircle
+  RefreshCw, RotateCcw as ReturnIcon, DollarSign, CheckCircle2, XCircle, ArrowLeft
 } from 'lucide-react';
 import Layout from '../components/Layouts/Layout';
 import jsPDF from 'jspdf';
@@ -742,6 +742,26 @@ function App() {
         </div>
 
         <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Breadcrumb and Back Button Header */}
+          <div className="w-full mb-6">
+            <div className="flex items-center gap-2 md:gap-4 w-full">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <nav className="text-sm md:text-base text-emerald-500 font-medium flex items-center gap-1" aria-label="Breadcrumb">
+                <span className="hover:underline cursor-pointer" onClick={() => navigate('/')}>Home</span>
+                <span className="mx-1 text-emerald-400">/</span>
+                <span className="hover:underline cursor-pointer" onClick={() => navigate('/profile')}>Profile</span>
+                <span className="mx-1 text-emerald-400">/</span>
+                <span className="text-emerald-700 font-semibold">My Orders</span>
+              </nav>
+            </div>
+          </div>
+
           {/* Page Header */}
           <div className="mb-8">
             <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">My Orders</h2>

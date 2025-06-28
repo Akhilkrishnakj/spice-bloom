@@ -96,6 +96,35 @@ const ProductDetail = () => {
     setProduct(updatedProduct);
   };
  
+  // ✅ Dynamic category navigation function
+  const getCategoryDisplayName = (categoryName) => {
+    if (!categoryName) return 'All Products';
+    
+    const categoryLower = categoryName.toLowerCase();
+    if (categoryLower.includes('spice')) {
+      return 'Spices';
+    } else if (categoryLower.includes('blend')) {
+      return 'Blends';
+    }
+    return categoryName;
+  };
+
+  // ✅ Navigate to shop with category filter
+  const navigateToCategory = () => {
+    if (product?.category?.name) {
+      const categoryLower = product.category.name.toLowerCase();
+      if (categoryLower.includes('spice')) {
+        navigate('/shop?category=spices');
+      } else if (categoryLower.includes('blend')) {
+        navigate('/shop?category=blends');
+      } else {
+        navigate('/shop');
+      }
+    } else {
+      navigate('/shop');
+    }
+  };
+ 
 const handleAddToCart = () => {
   if (!product || !product._id) {
     console.error("Invalid product:", product);
@@ -144,12 +173,29 @@ const handleAddToCart = () => {
             <span className="text-sm font-medium">Back</span>
           </button>
 
-          {/* Breadcrumb - Hidden on mobile */}
+          {/* ✅ Dynamic Breadcrumb - Hidden on mobile */}
           <nav className="text-sm text-gray-500 mb-6 sm:mb-8 hidden sm:block">
             <div className="flex items-center space-x-2 flex-wrap">
-              <span className="hover:text-gray-700 cursor-pointer">Home</span>
+              <span 
+                className="hover:text-gray-700 cursor-pointer transition-colors"
+                onClick={() => navigate('/')}
+              >
+                Home
+              </span>
               <span>/</span>
-              <span className="hover:text-gray-700 cursor-pointer">{product.category?.name}</span>
+              <span 
+                className="hover:text-gray-700 cursor-pointer transition-colors"
+                onClick={() => navigate('/shop')}
+              >
+                Shop
+              </span>
+              <span>/</span>
+              <span 
+                className="hover:text-gray-700 cursor-pointer transition-colors hover:text-green-600"
+                onClick={navigateToCategory}
+              >
+                {getCategoryDisplayName(product.category?.name)}
+              </span>
               <span>/</span>
               <span className="text-gray-900 font-medium truncate max-w-xs">{product.name}</span>
             </div>

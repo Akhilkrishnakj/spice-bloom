@@ -1,11 +1,51 @@
 import React from 'react'
 import Layout from '../components/Layouts/Layout'
-import { FaEnvelope, FaPhoneAlt, FaMapMarkerAlt, FaLeaf, FaGlobe, FaTruck, FaSeedling } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaEnvelope, FaPhoneAlt, FaMapMarkerAlt, FaLeaf, FaGlobe, FaTruck, FaSeedling, FaArrowLeft } from 'react-icons/fa';
 
 const Contact = () => {
+  const navigate = useNavigate();
   return (
     <Layout title={"Contact Us - Spice Bloom"}>
       <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+        {/* Header Row */}
+        <div className="w-full mb-12">
+          {/* Flex container for back button, breadcrumb, and title */}
+          <div className="flex items-center justify-between mb-4">
+            {/* Left: Back button and breadcrumb */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:from-green-600 hover:to-emerald-600 shadow-lg hover:shadow-xl"
+              >
+                <FaArrowLeft className="w-4 h-4" />
+                <span className="text-sm hidden sm:inline">Back</span>
+              </button>
+              {/* Breadcrumb - Hidden on mobile */}
+              <nav className="text-sm text-gray-500 hidden sm:block">
+                <div className="flex items-center space-x-3">
+                  <span
+                    className="hover:text-green-600 cursor-pointer transition-colors duration-300 font-medium"
+                    onClick={() => navigate('/')}
+                  >
+                    Home
+                  </span>
+                  <span className="text-gray-400">/</span>
+                  <span className="text-green-700 font-semibold">Contact</span>
+                </div>
+              </nav>
+            </div>
+            {/* Right: Empty div for balance */}
+            <div className="w-32 sm:w-40"></div>
+          </div>
+          {/* Centered Title */}
+          <div className="text-center">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-green-600">
+              Contact Us
+            </h2>
+          </div>
+        </div>
+
         {/* Company Highlight Section */}
         <div className="w-full max-w-3xl bg-gradient-to-r from-green-600 to-green-400 rounded-2xl shadow-lg p-8 mb-12 text-white text-center">
           <h2 className="text-4xl font-extrabold mb-4 tracking-tight">Why Choose <span className="text-white">Spice Bloom</span>?</h2>

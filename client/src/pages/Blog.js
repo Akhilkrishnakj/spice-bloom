@@ -1,8 +1,11 @@
 import React, { useState } from 'react'
 import Layout from '../components/Layouts/Layout'
+import { useNavigate } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
 import "../index.css";
 
 const Blog = () => {
+  const navigate = useNavigate();
 
   const blogData = [
     {
@@ -17,7 +20,7 @@ const Blog = () => {
       category: 'spices',
       title: 'Black Pepper',
       img: 'https://media.istockphoto.com/id/1318116927/photo/black-pepper-in-bowl.webp?a=1&b=1&s=612x612&w=0&k=20&c=ffARDTuPloJphhE5eb_nXWtsx-aQC-bFb72g97CFbsw=',
-      description: 'Black pepper from Kerala, often called the \'King of Spices,\' is renowned for its bold flavor and rich aroma. Grown in the Western Ghats, Kerala’s black pepper is organic, sun-dried, and hand-picked. It\'s widely used in traditional dishes and Ayurveda for its digestive and medicinal properties.'
+      description: 'Black pepper from Kerala, often called the "King of Spices," is renowned for its bold flavor and rich aroma. Grown in the Western Ghats, Kerala\'s black pepper is organic, sun-dried, and hand-picked. It\'s widely used in traditional dishes and Ayurveda for its digestive and medicinal properties.'
     },
     {
       id: 3,
@@ -83,7 +86,40 @@ const Blog = () => {
   return (
     <Layout title={"Blogs - Spice Bloom"}>
       <div className='blog-container'>
-        <h2>Our Spices Blogs</h2>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mb-8">
+          <div className="flex items-center justify-between">
+            {/* Left: Back button and breadcrumb */}
+            <div className="flex items-center gap-4 min-w-0">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:from-green-600 hover:to-emerald-600 shadow-lg hover:shadow-xl"
+              >
+                <FaArrowLeft className="w-4 h-4" />
+                <span className="text-sm hidden sm:inline">Back</span>
+              </button>
+              {/* Breadcrumb - Hidden on mobile */}
+              <nav className="text-sm text-gray-500 hidden sm:block truncate">
+                <div className="flex items-center space-x-3">
+                  <span
+                    className="hover:text-green-600 cursor-pointer transition-colors duration-300 font-medium"
+                    onClick={() => navigate('/')}
+                  >
+                    Home
+                  </span>
+                  <span className="text-gray-400">/</span>
+                  <span className="text-gray-900 font-semibold">Blog</span>
+                </div>
+              </nav>
+            </div>
+            {/* Center: Title */}
+            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full pointer-events-none">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-green-600 text-center">
+                Our Spices Blogs
+              </h1>
+            </div>
+          </div>
+        </div>
+
         <div className='filter-buttons'>
           <button onClick={() => setFilter('all')}>All</button>
           <button onClick={() => setFilter('spices')}>Spices</button>

@@ -5,13 +5,15 @@ import {
   Plus,
   RefreshCw,
   Search,
-  Filter
+  Filter,
+  ChevronLeft
 } from 'lucide-react';
 import { getOffers, createOffer, deleteOffer, updateOffer, getCoupons, createCoupon, deleteCoupon, updateCoupon } from "../../services/offerService";
 import { toast } from 'react-toastify';
 import OfferModel from './OfferModel'
 import CouponModel from './CouponModel'
 import { getAllCategories } from '../../api/category';
+import { useNavigate } from 'react-router-dom';
 
 const OfferManagement = () => {
   const [offers, setOffers] = useState([]);
@@ -26,6 +28,7 @@ const OfferManagement = () => {
   const [isCouponLoading, setIsCouponLoading] = useState(false);
   const [isCouponDeleting, setIsCouponDeleting] = useState(false);
   const [categories, setCategories] = useState([]);
+  const navigate = useNavigate();
 
   // Debug: log categories to check if they are fetched
   console.log('Categories fetched for CouponModel:', categories);
@@ -175,6 +178,24 @@ const OfferManagement = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100 p-4 md:p-8 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto">
+        {/* Breadcrumb and Back Button Header */}
+        <div className="w-full mb-4">
+          <div className="flex items-center gap-2 md:gap-4 w-full">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              aria-label="Go back"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <nav className="text-sm md:text-base text-emerald-500 font-medium flex items-center gap-1" aria-label="Breadcrumb">
+              <span className="hover:underline cursor-pointer" onClick={() => navigate('/admin/dashboard')}>Admin Dashboard</span>
+              <span className="mx-1 text-emerald-400">/</span>
+              <span className="text-emerald-700 font-semibold">Offers Management</span>
+            </nav>
+          </div>
+        </div>
+
         {/* Glassy Card for Tabs, Header, Actions */}
         <div className="bg-white/80 border border-emerald-100 rounded-2xl shadow-lg px-6 py-6 mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="flex gap-2">

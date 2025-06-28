@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import Layout from '../../components/Layouts/Layout';
-import { FiUpload, FiX, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiUpload, FiX, FiPlus, FiTrash2, FiChevronLeft } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 const Products = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -122,6 +124,26 @@ const Products = () => {
     <Layout title="Dashboard - Add Product">
       <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
+          {/* Breadcrumb and Back Button Header */}
+          <div className="w-full mb-6">
+            <div className="flex items-center gap-2 md:gap-4 w-full">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 rounded-full bg-green-50 text-green-600 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-400 transition-colors"
+                aria-label="Go back"
+              >
+                <FiChevronLeft className="w-5 h-5" />
+              </button>
+              <nav className="hidden md:flex text-sm md:text-base text-green-500 font-medium items-center gap-1" aria-label="Breadcrumb">
+                <span className="hover:underline cursor-pointer" onClick={() => navigate('/admin/dashboard')}>Admin Dashboard</span>
+                <span className="mx-1 text-green-400">/</span>
+                <span className="hover:underline cursor-pointer" onClick={() => navigate('/admin/products-manage')}>Products</span>
+                <span className="mx-1 text-green-400">/</span>
+                <span className="text-green-700 font-semibold">Add Product</span>
+              </nav>
+            </div>
+          </div>
+
           <div className="bg-white shadow rounded-lg overflow-hidden">
             {/* Form Header */}
             <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700">

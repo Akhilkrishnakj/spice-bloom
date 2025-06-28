@@ -12,7 +12,9 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: function() {
+      return !this.googleId; // Password is required only if not using Google auth
+    },
   },
   confirmPassword: {
     type: String,
@@ -20,7 +22,9 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
+    required: function() {
+      return !this.googleId; // Phone is required only if not using Google auth
+    },
   },
   role: {
     type: Number,
@@ -71,6 +75,14 @@ const userSchema = new mongoose.Schema({
   blocked: {
     type: Boolean,
     default: false,
+  },
+  active: {
+    type: Boolean,
+    default: true,
+  },
+  googleId: {
+    type: String,
+    required: false,
   },
 }, { timestamps: true });
 
