@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
   Heart, 
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/Layouts/Header';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { addToWishlist, removeFromWishlist } from '../redux/wishlistSlice.js';
 import { addToCart } from '../redux/cartSlice.js';
 import { useDispatch, useSelector } from 'react-redux';
@@ -27,11 +27,14 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchInputRef = useRef(null);
 
   const dispatch = useDispatch();
   const wishlist = useSelector(state => state.wishlist.items);
   const cart = useSelector(state => state.cart);
+  const navigate = useNavigate();
 
   console.log('Featured produdcvzxcts:', products);
 
@@ -230,20 +233,42 @@ const handleAddToCart = (product) => {
     setCurrentSlide((prev) => (prev - 1 + bannerSlides.length) % bannerSlides.length);
   };
 
-  // const addToWishlist = (product) => {
-  //   console.log('Added to wishlist:', product.name);
-  //   // Add your wishlist logic here
-  // };
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    if (value.trim()) {
+      const matches = products
+        .filter(p => (p.name || p.title || '').toLowerCase().includes(value.trim().toLowerCase()))
+        .slice(0, 5);
+      setSuggestions(matches);
+      setShowSuggestions(matches.length > 0);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
 
-  // const addToCart = (product) => {
-  //   console.log('Added to cart:', product.name);
-  //   // Add your cart logic here
-  // };
+  const handleSuggestionClick = (product) => {
+    setSearchQuery(product.name || product.title);
+    setShowSuggestions(false);
+    handleSearch({ preventDefault: () => {} }, product);
+    if (searchInputRef.current) searchInputRef.current.blur();
+  };
 
-  const handleSearch = (e) => {
+  const handleSearch = (e, overrideProduct) => {
     if (e.preventDefault) e.preventDefault();
-    console.log('Searching for:', searchQuery);
-    // Add your search logic here
+    const query = searchQuery.trim();
+    if (!query) return;
+    const found = overrideProduct || products.find(
+      p => (p.name || p.title || '').toLowerCase() === query.toLowerCase()
+    );
+    if (found) {
+      const id = found._id || found.id;
+      navigate(`/products/${id}`);
+    } else {
+      toast.error('Product not found');
+    }
+    setShowSuggestions(false);
   };
 
   return (
@@ -254,41 +279,39 @@ const handleAddToCart = (product) => {
       {/* Hero Banner */}
       <section className="relative h-[70vh] overflow-hidden">
         <div className="relative w-full h-full">
-          {bannerSlides.map((slide, index) => (
-            <div
-              key={index}
-              className={`absolute inset-0 transition-opacity duration-1000 ${
-                index === currentSlide ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
+          <div className="absolute inset-0 transition-opacity duration-1000">
               <div className="relative w-full h-full">
                 <img
-                  src={slide.image}
-                  alt={slide.title}
+                src={bannerSlides[currentSlide].image}
+                alt={bannerSlides[currentSlide].title}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-30"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/70 to-transparent"></div>
-                
                 <div className="absolute inset-0 flex items-center">
                   <div className="container mx-auto px-4">
                     <div className="max-w-2xl text-white">
                       <h2 className="text-white text-5xl md:text-6xl font-bold mb-4 leading-tight">
-                        {slide.title}
+                      {bannerSlides[currentSlide].title}
                       </h2>
                       <p className="text-xl md:text-2xl mb-8 text-white-200">
-                        {slide.subtitle}
+                      {bannerSlides[currentSlide].subtitle}
                       </p>
-                      
-                      {/* Search Bar */}
-                      <div className="flex max-w-md mb-8">
+                    {/* Search Bar with Suggestions */}
+                    <div className="relative flex max-w-md mb-8">
                         <input
+                        ref={searchInputRef}
                           type="text"
                           placeholder="Search for spices..."
                           value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
+                        onChange={handleSearchChange}
+                        onFocus={() => setShowSuggestions(suggestions.length > 0)}
+                        onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleSearch(e);
+                        }}
                           className="flex-1 px-6 py-4 rounded-l-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        autoComplete="off"
                         />
                         <button 
                           onClick={handleSearch}
@@ -296,17 +319,32 @@ const handleAddToCart = (product) => {
                         >
                           <Search className="w-5 h-5 text-white" />
                         </button>
-                      </div>
-                      
-                      <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all transform hover:scale-105">
-                        {slide.cta}
-                      </button>
+                      {/* Suggestions Dropdown */}
+                      {showSuggestions && suggestions.length > 0 && (
+                        <ul className="absolute left-0 top-full mt-1 w-full bg-white text-gray-800 rounded-b-xl shadow-lg z-20 max-h-56 overflow-auto">
+                          {suggestions.map((p, idx) => (
+                            <li
+                              key={p._id || p.id || idx}
+                              className="px-4 py-2 cursor-pointer hover:bg-emerald-100"
+                              onMouseDown={() => handleSuggestionClick(p)}
+                            >
+                              {p.name || p.title}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
+                    <button 
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all transform hover:scale-105"
+                      onClick={() => navigate('/shop')}
+                    >
+                      {bannerSlides[currentSlide].cta}
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
-          ))}
+          </div>
         </div>
 
         {/* Navigation Arrows */}

@@ -8,7 +8,6 @@ import { addToCart } from '../redux/cartSlice.js';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import FullPageLoader from '../components/FullPageLoader';
-import MiniLoader from '../components/MiniLoader';
 
 const Shop = () => {
   const dispatch = useDispatch();
@@ -38,31 +37,36 @@ const Shop = () => {
     getAllProducts();
   }, []);
 
-  const isInWishlist = (productId) => wishlist.some(item => item.id === productId);
+  const isInWishlist = (productId) => wishlist.some(item => item.id === productId || item._id === productId);
 
-const handleWishlistClick = (normalized) => {
-  if (isInWishlist(normalized.id)) {
-    dispatch(removeFromWishlist({ id: normalized.id }));
+  const handleWishlistClick = (product) => {
+    const productId = product._id || product.id;
+    if (isInWishlist(productId)) {
+      dispatch(removeFromWishlist(productId));
   } else {
     dispatch(addToWishlist({
-      id: normalized.id,
-      name: normalized.name,
-      img: normalized.image,
-      price: normalized.price,
-      category: normalized.category
+        id: productId,
+        _id: product._id,
+        name: product.name,
+        img: product.images?.[0] || "/default-placeholder.jpg",
+        price: product.price,
+        category: product.category
     }));
   }
 };
 
   const handleAddToCart = (product) => {
-    const existingItem = cart.find(item => item._id === product._id);
+    const productId = product._id || product.id;
+    const existingItem = cart.find(item => item._id === productId || item.id === productId);
     if (existingItem && existingItem.quantity >= 10) {
       toast.warn("Maximum 10 items allowed in cart!");
     } else {
       dispatch(addToCart({
       ...product,
       img: product.images?.[0] || "/default-placeholder.jpg", 
-      id: product._id || product.id
+        id: productId,
+        _id: product._id,
+        quantity: 1
     }));
     toast.success("Item added to cart!");
     }
@@ -233,6 +237,7 @@ const handleWishlistClick = (normalized) => {
                             src={product.images?.[0]}
                             alt={product.name}
                             className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                            onError={(e) => { e.target.src = '/default-placeholder.jpg'; }}
                           />
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-green-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
@@ -292,11 +297,7 @@ const handleWishlistClick = (normalized) => {
                       </div>
 
                       <button
-                        onClick={() => handleAddToCart({ id: product._id,
-    name: product.name,
-    img: product.images?.[0],  
-    price: product.price,
-    category: product.category?.name})}
+                        onClick={() => handleAddToCart(product)}
                         className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-6 rounded-2xl font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:from-green-600 hover:to-emerald-600 flex items-center justify-center gap-2 group"
                       >
                         <FaShoppingCart className="transition-transform duration-300 group-hover:scale-110" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CreditCard,
   Wallet,
@@ -7,8 +7,10 @@ import {
   Scan,
   CheckCircle,
   ExternalLink,
+  AlertCircle,
 } from 'lucide-react';
 import PropTypes from 'prop-types';
+import { getWalletBalance } from '../../api/wallet';
 
 const PaymentOptions = ({
   selectedPaymentMethod,
@@ -17,8 +19,29 @@ const PaymentOptions = ({
   handleInputChange,
   walletOptions = [], // dynamic wallet options
   showQrCode,
-  setShowQrCode
+  setShowQrCode,
+  total = 0 // Add total prop for wallet balance check
 }) => {
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [loadingWallet, setLoadingWallet] = useState(false);
+
+  // Fetch wallet balance when component mounts
+  useEffect(() => {
+    fetchWalletBalance();
+  }, []);
+
+  const fetchWalletBalance = async () => {
+    setLoadingWallet(true);
+    try {
+      const balance = await getWalletBalance();
+      setWalletBalance(balance);
+    } catch (error) {
+      console.error('Failed to fetch wallet balance:', error);
+    } finally {
+      setLoadingWallet(false);
+    }
+  };
+
   const paymentMethods = [
     {
       id: 'card',
@@ -44,8 +67,9 @@ const PaymentOptions = ({
       id: 'spicebloom_wallet',
       name: 'Spice Bloom Wallet',
       icon: Wallet,
-      description: 'Use your Spice Bloom wallet balance',
+      description: `Use your Spice Bloom wallet balance (₹${walletBalance.toFixed(2)})`,
       special: true,
+      disabled: walletBalance < total,
     },
     {
       id: 'cod',
@@ -61,6 +85,14 @@ const PaymentOptions = ({
       popular: true,
     },
   ];
+
+  const handlePaymentMethodChange = (methodId) => {
+    // Don't allow selection if wallet balance is insufficient
+    if (methodId === 'spicebloom_wallet' && walletBalance < total) {
+      return;
+    }
+    setSelectedPaymentMethod(methodId);
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-100">
@@ -79,6 +111,8 @@ const PaymentOptions = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {paymentMethods.map((method) => {
           const Icon = method.icon;
+          const isDisabled = method.disabled;
+          
           return (
             <div key={method.id} className="relative">
               <input
@@ -87,20 +121,23 @@ const PaymentOptions = ({
                 name="paymentMethod"
                 value={method.id}
                 checked={selectedPaymentMethod === method.id}
-                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                onChange={(e) => handlePaymentMethodChange(e.target.value)}
                 className="sr-only"
+                disabled={isDisabled}
               />
               <label
                 htmlFor={method.id}
                 className={`block p-4 border-2 rounded-xl cursor-pointer transition-all hover:shadow-md transform hover:scale-105 ${
                   selectedPaymentMethod === method.id
                     ? 'border-green-500 bg-green-50 shadow-lg'
+                    : isDisabled
+                    ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
                     : 'border-gray-200 hover:border-green-300'
                 } ${method.special ? 'bg-gradient-to-r from-green-50 to-green-100' : ''}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Icon className={`w-6 h-6 mr-3 ${selectedPaymentMethod === method.id ? 'text-green-600' : 'text-gray-400'}`} />
+                    <Icon className={`w-6 h-6 mr-3 ${selectedPaymentMethod === method.id ? 'text-green-600' : isDisabled ? 'text-gray-400' : 'text-gray-400'}`} />
                     <div>
                       <div className="flex items-center">
                         <h3 className="font-semibold text-gray-900">{method.name}</h3>
@@ -112,6 +149,12 @@ const PaymentOptions = ({
                         )}
                       </div>
                       <p className="text-sm text-gray-600">{method.description}</p>
+                      {method.id === 'spicebloom_wallet' && isDisabled && (
+                        <div className="flex items-center mt-2 text-red-600 text-sm">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          <span>Insufficient balance</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {selectedPaymentMethod === method.id && (
@@ -123,6 +166,36 @@ const PaymentOptions = ({
           );
         })}
       </div>
+
+      {/* Spice Bloom Wallet Info */}
+      {selectedPaymentMethod === 'spicebloom_wallet' && (
+        <div className="border-t pt-6 bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                <Wallet className="w-4 h-4 text-green-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-green-800">Spice Bloom Wallet</h4>
+                <p className="text-sm text-green-700">
+                  Available Balance: ₹{loadingWallet ? 'Loading...' : walletBalance.toFixed(2)}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-green-800">₹{total.toFixed(2)}</p>
+              <p className="text-sm text-green-600">Order Total</p>
+            </div>
+          </div>
+          {walletBalance >= total && (
+            <div className="mt-3 p-3 bg-green-100 rounded-lg">
+              <p className="text-sm text-green-800 font-medium">
+                Balance after payment: ₹{(walletBalance - total).toFixed(2)}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Conditional Fields */}
       {selectedPaymentMethod === 'card' && (
@@ -223,7 +296,8 @@ PaymentOptions.propTypes = {
   handleInputChange: PropTypes.func.isRequired,
   walletOptions: PropTypes.array,
   showQrCode: PropTypes.bool,
-  setShowQrCode: PropTypes.func
+  setShowQrCode: PropTypes.func,
+  total: PropTypes.number
 };
 
 export default PaymentOptions;

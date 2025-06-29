@@ -6,11 +6,11 @@ import jwt from 'jsonwebtoken';
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: '/api/v1/auth/google/callback',
-    },
-    async (accessToken, refreshToken, profile, done) => {
+},
+async (accessToken, refreshToken, profile, done) => {
       try {
         let user = await User.findOne({ email: profile.emails[0].value });
 
@@ -20,14 +20,14 @@ passport.use(
         console.log("Google Secret:", process.env.GOOGLE_CLIENT_SECRET);
 
         user = new User({
-          name: profile.displayName,
-          email: profile.emails[0].value,
+    name: profile.displayName,
+    email: profile.emails[0].value,
           profilePic: profile.photos[0].value,
           googleId: profile.id,
-          role: 0,
+    role: 0,
           active: true,
           phone: '',
-        });
+  });
 
         await user.save();
         return done(null, user);

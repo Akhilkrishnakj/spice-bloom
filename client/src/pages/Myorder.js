@@ -55,6 +55,13 @@ const trackingStages = [
     icon: CheckCircle, 
     color: 'from-green-500 to-emerald-600',
     description: 'Your order has been successfully delivered'
+  },
+  { 
+    id: 'cancelled', 
+    label: 'Cancelled', 
+    icon: X, 
+    color: 'from-red-500 to-red-600',
+    description: 'Your order has been cancelled'
   }
 ];
 
@@ -93,7 +100,7 @@ function App() {
         
         const ordersWithTracking = (data.orders || []).map(order => ({
           ...order,
-          trackingStages: generateTrackingStages(order.status),
+          trackingStages: generateTrackingStages(order.status, order),
           estimatedDelivery: order.tracking?.estimatedDelivery || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
           currentLocation: order.tracking?.currentLocation || {
             lat: 12.9716 + (Math.random() - 0.5) * 0.01,
@@ -143,7 +150,7 @@ function App() {
             order._id === updateOrder._id ? { 
               ...order, 
               ...updateOrder,
-              trackingStages: generateTrackingStages(updateOrder.status || order.status)
+              trackingStages: generateTrackingStages(updateOrder.status || order.status, order)
             } : order
           );
           console.log('📦 Updated orders:', updatedOrders);
@@ -163,7 +170,7 @@ function App() {
                     currentLocation: trackingData.currentLocation,
                     estimatedDelivery: trackingData.estimatedDelivery,
                     status: trackingData.status,
-                    trackingStages: generateTrackingStages(trackingData.status || order.status)
+                    trackingStages: generateTrackingStages(trackingData.status || order.status, order)
                   } 
                 : order
             )
@@ -194,7 +201,7 @@ function App() {
                   estimatedDelivery: trackingData.estimatedDelivery,
                   statusTimeline: trackingData.statusTimeline,
                   status: trackingData.status,
-                  trackingStages: generateTrackingStages(trackingData.status || order.status)
+                  trackingStages: generateTrackingStages(trackingData.status || order.status, order)
                 } 
               : order
           )
@@ -255,33 +262,86 @@ function App() {
     }
   }, [user?._id]);
 
-  const generateTrackingStages = (currentStatus) => {
+  const generateTrackingStages = (currentStatus, order = null) => {
     console.log('🎯 Generating tracking stages for status:', currentStatus);
+    console.log('🎯 Order data:', order);
+    
+    // If we have order data with statusTimeline, use it for cancelled orders
+    if (order && order.statusTimeline && order.statusTimeline.length > 0 && currentStatus.toLowerCase() === 'cancelled') {
+      // Only keep the first 'cancelled' entry
+      let cancelledFound = false;
+      const timelineStages = order.statusTimeline
+        .filter(entry => {
+          if (entry.status === 'cancelled') {
+            if (!cancelledFound) {
+              cancelledFound = true;
+              return true;
+            }
+            return false; // skip duplicates
+          }
+          return true;
+        })
+        .map((timelineEntry, index) => {
+          const stageConfig = trackingStages.find(stage => stage.id === timelineEntry.status);
+          const Icon = stageConfig ? stageConfig.icon : Clock;
+          return {
+            id: timelineEntry.status,
+            label: stageConfig ? stageConfig.label : timelineEntry.status.charAt(0).toUpperCase() + timelineEntry.status.slice(1),
+            icon: Icon,
+            color: stageConfig ? stageConfig.color : 'from-gray-500 to-gray-600',
+            description: stageConfig ? stageConfig.description : `Order status: ${timelineEntry.status}`,
+            completed: true, // All timeline entries are completed
+            active: false,
+            cancelled: timelineEntry.status === 'cancelled',
+            timestamp: timelineEntry.timestamp,
+            notes: timelineEntry.notes,
+            location: timelineEntry.location
+          };
+        });
+      // Add cancelled stage if not already in timeline
+      if (!timelineStages.find(stage => stage.id === 'cancelled')) {
+        const cancelledStage = {
+          id: 'cancelled',
+          label: 'Cancelled',
+          icon: X,
+          color: 'from-red-500 to-red-600',
+          description: 'Your order has been cancelled',
+          completed: false,
+          active: true,
+          cancelled: true,
+          timestamp: order.cancelledAt || new Date().toISOString(),
+          notes: order.cancellationReason || 'Order cancelled by user'
+        };
+        timelineStages.push(cancelledStage);
+      }
+      console.log('🎯 Generated timeline stages:', timelineStages);
+      return timelineStages;
+    }
+    
+    // Fallback to original logic for non-cancelled orders or orders without timeline
     const statusOrder = ['processing', 'shipped', 'out_for_delivery', 'delivered'];
     let currentIndex = statusOrder.indexOf(currentStatus.toLowerCase());
     console.log('🎯 Current index:', currentIndex);
     
-    if (currentStatus.toLowerCase() === 'cancelled') {
-      return trackingStages.slice(0, 3).map((stage, idx) => ({
-        ...stage,
-        completed: idx < 2,
-        active: false,
-        cancelled: idx === 2,
-        timestamp: new Date(Date.now() - (2 - idx) * 24 * 60 * 60 * 1000).toISOString()
-      }));
-    }
-    
     if (currentIndex === -1) currentIndex = 0;
     
-    const stages = trackingStages.map((stage, index) => ({
-      ...stage,
-      completed: index < currentIndex,
-      active: index === currentIndex,
-      cancelled: false,
-      timestamp: index <= currentIndex ? 
-        new Date(Date.now() - (currentIndex - index) * 24 * 60 * 60 * 1000).toISOString() : 
-        null
-    }));
+    let stages = trackingStages
+      .filter(stage => {
+        // Only include 'cancelled' if the order is actually cancelled
+        if (stage.id === 'cancelled') {
+          return currentStatus.toLowerCase() === 'cancelled';
+        }
+        return true;
+      })
+      .map((stage, index) => ({
+        ...stage,
+        completed: index < currentIndex,
+        active: index === currentIndex,
+        cancelled: false,
+        timestamp: index <= currentIndex ? 
+          new Date(Date.now() - (currentIndex - index) * 24 * 60 * 60 * 1000).toISOString() : 
+          null
+      }));
     
     console.log('🎯 Generated stages:', stages);
     return stages;
@@ -400,7 +460,7 @@ function App() {
   const EnhancedLiveTracking = ({ order }) => {
     const currentUpdate = liveUpdates[order._id];
     const activeStageIndex = order.trackingStages.findIndex(stage => stage.active);
-    const progress = ((activeStageIndex + 1) / order.trackingStages.length) * 100;
+    const progress = order.status === 'cancelled' ? 100 : ((activeStageIndex + 1) / order.trackingStages.length) * 100;
     
     return (
       <div className="space-y-6">
@@ -408,20 +468,41 @@ function App() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+                order.status === 'cancelled' 
+                  ? 'bg-gradient-to-r from-red-500 to-red-600' 
+                  : 'bg-gradient-to-r from-emerald-500 to-blue-500'
+              }`}>
+                {order.status === 'cancelled' ? (
+                  <X className="w-6 h-6 text-white" />
+                ) : (
                 <Navigation className="w-6 h-6 text-white" />
+                )}
               </div>
-              {currentUpdate && (
+              {currentUpdate && order.status !== 'cancelled' && (
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-pulse border-2 border-white shadow-lg"></div>
               )}
             </div>
             <div>
-              <h4 className="text-xl font-bold text-gray-900">Live Package Tracking</h4>
-              <p className="text-sm text-gray-600">Real-time location and status updates</p>
+              <h4 className="text-xl font-bold text-gray-900">
+                {order.status === 'cancelled' ? 'Order Cancelled' : 'Live Package Tracking'}
+              </h4>
+              <p className="text-sm text-gray-600">
+                {order.status === 'cancelled' 
+                  ? 'This order has been cancelled' 
+                  : 'Real-time location and status updates'
+                }
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1.5 bg-blue-100/80 text-blue-700 rounded-full text-sm font-medium backdrop-blur-sm">Order Status Timeline</span>
+            <span className={`px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
+              order.status === 'cancelled' 
+                ? 'bg-red-100/80 text-red-700' 
+                : 'bg-blue-100/80 text-blue-700'
+            }`}>
+              {order.status === 'cancelled' ? 'Order Status' : 'Order Status Timeline'}
+            </span>
             {order.status !== 'cancelled' && order.status !== 'delivered' && (
               <button
                 className="bg-red-500 text-white px-4 py-2 rounded-md ml-4"
@@ -436,20 +517,32 @@ function App() {
         {/* Progress Overview */}
         <div className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/30 shadow-lg">
           <div className="flex justify-between items-center mb-4">
-            <span className="text-sm font-semibold text-gray-700">Delivery Progress</span>
-            <span className="text-sm text-gray-500 font-medium">{Math.round(progress)}% Complete</span>
+            <span className="text-sm font-semibold text-gray-700">
+              {order.status === 'cancelled' ? 'Order Status' : 'Delivery Progress'}
+            </span>
+            <span className={`text-sm font-medium ${
+              order.status === 'cancelled' ? 'text-red-600' : 'text-gray-500'
+            }`}>
+              {order.status === 'cancelled' ? 'Cancelled' : `${Math.round(progress)}% Complete`}
+            </span>
           </div>
           
           <div className="relative w-full bg-gray-200 rounded-full h-3 mb-4 overflow-hidden">
             <div 
-              className="h-3 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
+              className={`h-3 rounded-full transition-all duration-1000 ease-out relative overflow-hidden ${
+                order.status === 'cancelled' 
+                  ? 'bg-gradient-to-r from-red-500 to-red-600' 
+                  : 'bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500'
+              }`}
               style={{ width: `${progress}%` }}
             >
+              {order.status !== 'cancelled' && (
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+              )}
             </div>
           </div>
 
-          {currentUpdate && (
+          {currentUpdate && order.status !== 'cancelled' && (
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2 text-blue-600">
                 <MapPin className="w-4 h-4" />
@@ -465,7 +558,9 @@ function App() {
 
         {/* Enhanced Timeline */}
         <div className="backdrop-blur-xl bg-white/60 rounded-2xl p-6 border border-white/30 shadow-lg">
-          <h5 className="font-bold text-lg text-gray-900 mb-6">Tracking Timeline</h5>
+          <h5 className="font-bold text-lg text-gray-900 mb-6">
+            {order.status === 'cancelled' ? 'Order Timeline' : 'Tracking Timeline'}
+          </h5>
           
           <div className="space-y-6">
             {order.trackingStages.map((stage, index) => {
@@ -473,32 +568,35 @@ function App() {
               const isLast = index === order.trackingStages.length - 1;
               const isActive = stage.active;
               const isCompleted = stage.completed;
+              const isCancelled = stage.cancelled;
               
               return (
                 <div key={stage.id} className="flex items-start gap-4 relative">
                   {/* Connection Line */}
                   {!isLast && (
                     <div className={`absolute left-6 top-12 w-0.5 h-8 transition-all duration-500 ${
-                      isCompleted ? `bg-gradient-to-b ${stage.color}` : 'bg-gray-200'
+                      isCompleted || isCancelled ? `bg-gradient-to-b ${stage.color}` : 'bg-gray-200'
                     }`}></div>
                   )}
                   
                   {/* Status Icon */}
                   <div className="relative z-10">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center border-3 transition-all duration-500 ${
-                      isCompleted 
+                      isCancelled 
+                        ? `bg-gradient-to-r ${stage.color} border-transparent shadow-lg`
+                        : isCompleted 
                         ? `bg-gradient-to-r ${stage.color} border-transparent shadow-lg`
                         : isActive 
                         ? 'bg-white border-blue-500 shadow-xl ring-4 ring-blue-100'
                         : 'bg-gray-100 border-gray-300'
                     }`}>
                       <Icon className={`w-5 h-5 transition-all duration-300 ${
-                        isCompleted ? 'text-white' : isActive ? 'text-blue-500' : 'text-gray-400'
+                        isCancelled ? 'text-white' : isCompleted ? 'text-white' : isActive ? 'text-blue-500' : 'text-gray-400'
                       } ${isActive ? 'animate-pulse' : ''}`} />
                     </div>
                     
                     {/* Animated ring for active stage */}
-                    {isActive && (
+                    {isActive && !isCancelled && (
                       <div className="absolute inset-0 rounded-full border-2 border-blue-400 animate-ping"></div>
                     )}
                   </div>
@@ -507,10 +605,11 @@ function App() {
                   <div className="flex-1 pb-2">
                     <div className="flex items-center justify-between mb-2">
                       <h6 className={`font-semibold text-lg transition-colors ${
-                        isCompleted ? 'text-gray-900' : isActive ? 'text-blue-600' : 'text-gray-500'
+                        isCancelled ? 'text-red-600' : isCompleted ? 'text-gray-900' : isActive ? 'text-blue-600' : 'text-gray-500'
                       }`}>
                         {stage.label}
-                        {isActive && <span className="ml-2 text-sm text-blue-500 animate-pulse">●</span>}
+                        {isActive && !isCancelled && <span className="ml-2 text-sm text-blue-500 animate-pulse">●</span>}
+                        {isCancelled && <span className="ml-2 text-sm text-red-500">●</span>}
                       </h6>
                       {stage.timestamp && (
                         <span className="text-sm text-gray-400 font-medium">
@@ -520,13 +619,34 @@ function App() {
                     </div>
                     
                     <p className={`text-sm mb-3 ${
-                      isCompleted ? 'text-gray-700' : isActive ? 'text-blue-600' : 'text-gray-500'
+                      isCancelled ? 'text-red-600' : isCompleted ? 'text-gray-700' : isActive ? 'text-blue-600' : 'text-gray-500'
                     }`}>
                       {stage.description}
                     </p>
                     
+                    {/* Additional Timeline Information */}
+                    {(stage.notes || stage.location) && (
+                      <div className="mt-3 p-3 bg-gray-50/80 rounded-lg border border-gray-200/50">
+                        {stage.notes && (
+                          <div className="mb-2">
+                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Notes:</span>
+                            <p className="text-sm text-gray-700 mt-1">{stage.notes}</p>
+                          </div>
+                        )}
+                        {stage.location && stage.location.address && (
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Location:</span>
+                              <p className="text-sm text-gray-700 mt-1">{stage.location.address}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
                     {/* Live Updates for Active Stage */}
-                    {isActive && currentUpdate && (
+                    {isActive && currentUpdate && !isCancelled && (
                       <div className="mt-3 p-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200/50 backdrop-blur-sm">
                         <div className="flex items-start gap-3">
                           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mt-2"></div>
@@ -559,7 +679,7 @@ function App() {
         </div>
 
         {/* Estimated Delivery Card */}
-        {order.estimatedDelivery && order.status !== 'delivered' && (
+        {order.estimatedDelivery && order.status !== 'delivered' && order.status !== 'cancelled' && (
           <div className="backdrop-blur-xl bg-gradient-to-r from-emerald-50/80 to-blue-50/80 rounded-2xl p-6 border border-emerald-200/50 shadow-lg">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
@@ -599,15 +719,21 @@ function App() {
       });
 
       if (data.success) {
-        toast.success(`Order cancelled successfully! ${data.refundAmount ? `₹${data.refundAmount} refunded to your ${data.order.paymentMethod === 'wallet' ? 'wallet' : 'original payment method'}.` : ''}`);
-        
+        // Custom message for Razorpay
+        if (data.order.paymentMethod === 'razorpay') {
+          toast.success('Order cancelled successfully! Refund will be credited to your original payment method in 3-5 business days.');
+        } else if (data.order.paymentMethod === 'wallet') {
+          toast.success(`Order cancelled successfully! ₹${data.refundAmount} refunded to your wallet.`);
+        } else {
+          toast.success('Order cancelled successfully!');
+        }
         // Update local state with the updated order
         setOrders((prev) =>
           prev.map((order) =>
             order._id === orderId 
               ? { 
                   ...data.order, 
-                  trackingStages: generateTrackingStages("cancelled")
+                  trackingStages: generateTrackingStages("cancelled", data.order)
                 } 
               : order
           )

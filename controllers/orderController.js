@@ -88,6 +88,10 @@ export const createOrderController = async (req, res) => {
     const random = Math.floor(Math.random() * 1000).toString().padStart(4, '0');
     const orderNumber = `SPB-${day}${month}-${year}-${random}`;
 
+    // Debug payment data
+    console.log("🔍 Payment Method:", paymentMethod);
+    console.log("🔍 Payment Data:", payment);
+
     // --- WALLET DEDUCTION LOGIC ---
     if (paymentMethod === 'wallet') {
       // Find user and check wallet balance
@@ -130,6 +134,10 @@ export const createOrderController = async (req, res) => {
       payment: {
         ...payment,
         status: payment?.status || (paymentMethod === "cod" ? "paid" : "created"),
+        // Store Razorpay details if available
+        razorpay_order_id: payment?.razorpay_order_id || null,
+        razorpay_payment_id: payment?.razorpay_payment_id || null,
+        razorpay_signature: payment?.razorpay_signature || null,
       },
       status: "processing",
     });
@@ -142,6 +150,9 @@ export const createOrderController = async (req, res) => {
     }
 
     console.log("🧠 Saving Order:", newOrder);
+    console.log("🔍 Order Payment Details:", newOrder.payment);
+    console.log("🔍 Payment Method Stored:", newOrder.paymentMethod);
+    console.log("🔍 Total Amount Stored:", newOrder.total);
 
     await newOrder.save();
 
@@ -359,11 +370,29 @@ export const cancelOrder = async (req, res) => {
     // Process refund based on payment method
     let refundTransactionId = null;
     let refundAmount = order.total;
+    let refundStatus = 'Completed';
+    let refundMessage = 'Order cancelled successfully';
+
+    console.log("🔍 Cancelling order with payment method:", order.paymentMethod);
+    console.log("🔍 Order payment details:", order.payment);
+    console.log("🔍 Refund amount:", refundAmount);
 
     if (order.paymentMethod === 'wallet') {
+      console.log("🔍 Processing wallet refund for order:", order.orderNumber);
+      console.log("🔍 Refund amount:", refundAmount);
+      console.log("🔍 User ID:", userId);
+      
       // Add to user's wallet
       const user = await User.findById(userId);
+      if (!user) {
+        console.log("❌ User not found for wallet refund");
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+      
+      console.log("🔍 User found, current wallet balance:", user.wallet);
       user.wallet += refundAmount;
+      console.log("🔍 New wallet balance after refund:", user.wallet);
+      
       user.transactions.push({
         type: 'refund',
         amount: refundAmount,
@@ -372,37 +401,82 @@ export const cancelOrder = async (req, res) => {
         balanceAfter: user.wallet,
         date: new Date()
       });
+      
       await user.save();
+      console.log("✅ Wallet refund processed successfully");
+      
       refundTransactionId = `wallet_refund_${Date.now()}`;
-    } else if (order.paymentMethod === 'razorpay' && order.payment?.razorpay_payment_id) {
+      refundMessage = 'Order cancelled successfully. Amount refunded to wallet.';
+    } else if (order.paymentMethod === 'razorpay') {
+      // Check if we have a valid Razorpay payment ID
+      if (!order.payment?.razorpay_payment_id) {
+        console.log("⚠️ No Razorpay payment ID found for order");
+        // No payment ID found, mark as no refund needed
+        refundStatus = 'No Refund Required';
+        refundMessage = 'Order cancelled successfully. No payment was made.';
+        refundTransactionId = `no_payment_${Date.now()}`;
+      } else {
+        console.log("🔍 Processing Razorpay refund for payment ID:", order.payment.razorpay_payment_id);
       // Process Razorpay refund
       try {
+          console.log("🔍 Razorpay Key ID:", process.env.RAZORPAY_KEY_ID);
+          console.log("🔍 Razorpay Secret:", process.env.RAZORPAY_SECRET ? "***SECRET_LOADED***" : "NOT_LOADED");
+          
         const razorpay = new Razorpay({
           key_id: process.env.RAZORPAY_KEY_ID,
-          key_secret: process.env.RAZORPAY_KEY_SECRET,
+            key_secret: process.env.RAZORPAY_SECRET,
         });
 
         const refund = await razorpay.payments.refund(order.payment.razorpay_payment_id, {
-          amount: refundAmount * 100, // Razorpay expects amount in paise
+            amount: Math.round(refundAmount * 100), // Razorpay expects amount in paise
           speed: 'normal'
         });
 
         refundTransactionId = refund.id;
+          refundMessage = 'Order cancelled successfully. Refund will be processed to your original payment method.';
+          console.log("✅ Razorpay refund successful:", refund.id);
+          
       } catch (razorpayError) {
-        console.error('Razorpay refund error:', razorpayError);
-        return res.status(500).json({ 
+          console.error('❌ Razorpay refund error:', razorpayError);
+          
+          // Check if it's a specific Razorpay error
+          if (razorpayError.error && razorpayError.error.description) {
+            return res.status(400).json({ 
+              success: false, 
+              message: `Refund failed: ${razorpayError.error.description}` 
+            });
+          } else if (razorpayError.statusCode === 400) {
+            return res.status(400).json({ 
           success: false, 
-          message: 'Failed to process payment refund. Please contact support.' 
-        });
+              message: 'Payment already refunded or invalid payment ID' 
+            });
+          } else {
+            // For other errors, still cancel the order but mark refund as failed
+            refundStatus = 'Failed';
+            refundMessage = 'Order cancelled successfully. Refund processing failed - please contact support.';
+            refundTransactionId = `refund_failed_${Date.now()}`;
+          }
+        }
       }
+    } else if (order.paymentMethod === 'cod') {
+      // COD orders don't need refunds
+      refundStatus = 'No Refund Required';
+      refundMessage = 'Order cancelled successfully. No payment was made.';
+      refundTransactionId = `cod_cancelled_${Date.now()}`;
+    } else {
+      // Unknown payment method
+      refundStatus = 'Unknown';
+      refundMessage = 'Order cancelled successfully. Refund status unknown.';
+      refundTransactionId = `unknown_method_${Date.now()}`;
     }
 
     // Update order with refund info
     order.returnInfo = {
       ...order.returnInfo,
       totalRefundAmount: refundAmount,
-      refundStatus: 'Completed',
-      refundMethod: order.paymentMethod === 'wallet' ? 'Wallet' : 'Original Payment',
+      refundStatus: refundStatus,
+      refundMethod: order.paymentMethod === 'wallet' ? 'Wallet' : 
+                   order.paymentMethod === 'razorpay' ? 'Original Payment' : 'N/A',
       refundTransactionId: refundTransactionId,
       refundProcessedAt: new Date(),
       refundProcessedBy: userId
@@ -418,10 +492,11 @@ export const cancelOrder = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Order cancelled successfully',
+      message: refundMessage,
       order,
       refundAmount,
-      refundTransactionId
+      refundTransactionId,
+      refundStatus
     });
 
   } catch (error) {

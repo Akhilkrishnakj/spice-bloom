@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   ShoppingCart,
   Truck,
@@ -8,31 +8,8 @@ import {
   Leaf,
   Shield
 } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
-const OrderSummary = () => {
-  const cartItems = useSelector((state) => state.cart) 
-
-  const [subtotal, setSubtotal] = useState(0);
-  const [shipping, setShipping] = useState(0);
-  const [tax, setTax] = useState(0);
-  const [total, setTotal] = useState(0);
-
-  useEffect(() => {
-    const calcSubtotal = cartItems.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
-    const calcShipping = calcSubtotal >= 1000 ? 0 : 50;
-    const calcTax = parseFloat((calcSubtotal * 0.05).toFixed(2));
-    const calcTotal = calcSubtotal + calcShipping + calcTax;
-
-    setSubtotal(calcSubtotal);
-    setShipping(calcShipping);
-    setTax(calcTax);
-    setTotal(calcTotal);
-  }, [cartItems]);
-
+const OrderSummary = ({ cartItems, subtotal, shipping, tax, total }) => {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-6 border border-green-100 backdrop-blur-sm sticky top-8">
       <div className="flex items-center mb-6">
@@ -76,6 +53,7 @@ const OrderSummary = () => {
       </div>
 
       {/* Offer Banner */}
+      {shipping === 0 && (
       <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-4 mb-6 text-white shadow-lg">
         <div className="flex items-center">
           <Gift className="w-6 h-6 mr-3" />
@@ -86,6 +64,7 @@ const OrderSummary = () => {
           <Percent className="w-6 h-6" />
         </div>
       </div>
+      )}
 
       {/* Order Totals */}
       <div className="border-t border-green-100 pt-6 space-y-4">

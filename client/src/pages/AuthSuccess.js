@@ -17,7 +17,7 @@ const AuthSuccess = () => {
     const handleAuthSuccess = async () => {
       try {
         hasProcessed.current = true;
-        
+    
         // Get token from URL parameters
         const urlParams = new URLSearchParams(location.search);
         const token = urlParams.get('token');

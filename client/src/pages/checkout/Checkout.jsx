@@ -46,6 +46,13 @@ const CheckoutPage = () => {
   const tax = parseFloat((subtotal * 0.05).toFixed(2));
   const total = subtotal + shipping + tax;
 
+  // Debug total calculation
+  console.log("🔍 Cart Items:", cartItems);
+  console.log("🔍 Subtotal:", subtotal);
+  console.log("🔍 Shipping:", shipping);
+  console.log("🔍 Tax:", tax);
+  console.log("🔍 Total:", total);
+
   const steps = [
     { id: 1, title: 'Shipping', icon: MapPin },
     { id: 2, title: 'Payment', icon: CreditCard },
@@ -198,6 +205,8 @@ const createOrderInBackend = async (paymentDetails = {}) => {
     console.log("🟡 Sending Payload to Backend:", payload);
     console.log("🔍 Items in payload:", payload.items);
     console.log("🔍 Final Payment Method:", payload.paymentMethod);
+    console.log("🔍 Original Payment Method:", selectedPaymentMethod);
+    console.log("🔍 Total Amount:", payload.total);
 
     // ✅ Validate before sending
     const hasInvalidItems = payload.items.some(item => !item.productId);
@@ -353,6 +362,7 @@ const createOrderInBackend = async (paymentDetails = {}) => {
                 setSelectedPaymentMethod={setSelectedPaymentMethod}
                 formData={formData}
                 handleInputChange={handleInputChange}
+                total={total}
               />
             )}
 

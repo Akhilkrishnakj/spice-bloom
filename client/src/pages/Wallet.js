@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getWalletBalance, getWalletTransactions, addMoneyToWallet } from '../api/wallet';
+import { getWalletBalance, getWalletTransactions } from '../api/wallet';
 import {
   Plus,
   ArrowUpRight,
@@ -13,14 +13,14 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layouts/Layout';
+import WalletTopupModal from '../components/WalletTopupModal';
 
 const Wallet = () => {
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [showTopupModal, setShowTopupModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,28 +52,9 @@ const Wallet = () => {
     }
   };
 
-  // Demo add money handler (replace with Razorpay integration)
-  const handleAddMoney = async () => {
-    setAdding(true);
-    setError('');
-    setSuccess('');
-    try {
-      // Replace this with your Razorpay payment flow
-      const amount = 1000; // demo amount
-      const paymentDetails = { demo: true }; // replace with real payment details
-      await addMoneyToWallet(amount, paymentDetails);
-      setSuccess('Money added to wallet!');
-      await fetchWalletData();
-    } catch (err) {
-      // Show backend error if wallet limit is exceeded
-      if (err.response && err.response.data && err.response.data.error) {
-        setError(err.response.data.error);
-      } else {
-        setError('Failed to add money');
-      }
-    } finally {
-      setAdding(false);
-    }
+  const handleTopupSuccess = (newBalance) => {
+    setBalance(newBalance);
+    fetchWalletData(); // Refresh transactions
   };
 
   const formatDate = (dateString) => {
@@ -165,8 +146,7 @@ const Wallet = () => {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
           <button
-            onClick={handleAddMoney}
-            disabled={adding}
+            onClick={() => setShowTopupModal(true)}
             className="relative bg-gradient-to-br from-emerald-400/80 to-green-400/80 text-white rounded-2xl p-8 shadow-xl hover:scale-105 hover:shadow-emerald-300/40 transition-all duration-300 group overflow-hidden"
           >
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
@@ -267,6 +247,13 @@ const Wallet = () => {
           </div>
         </div>
       </main>
+
+      {/* Wallet Topup Modal */}
+      <WalletTopupModal
+        isOpen={showTopupModal}
+        onClose={() => setShowTopupModal(false)}
+        onSuccess={handleTopupSuccess}
+      />
     </div>
     </Layout>
   );
