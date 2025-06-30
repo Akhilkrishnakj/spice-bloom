@@ -1,107 +1,90 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FaCheckCircle } from 'react-icons/fa';
-import styled from 'styled-components';
-
-const SuccessContainer = styled.div`
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #e6ffe6 0%, #f0fff0 100%);
-`;
-
-const SuccessCard = styled(motion.div)`
-  background: white;
-  padding: 2.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  width: 90%;
-  max-width: 400px;
-`;
-
-const IconWrapper = styled(motion.div)`
-  svg {
-    font-size: 4rem;
-    color: #10b981;
-    filter: drop-shadow(0 4px 6px rgba(16, 185, 129, 0.2));
-  }
-`;
-
-const Title = styled.h1`
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 1rem 0 0.5rem;
-`;
-
-const Message = styled.p`
-  color: #6b7280;
-  margin-bottom: 1.5rem;
-`;
-
-const ProgressBarContainer = styled.div`
-  width: 100%;
-  height: 4px;
-  background: #e5e7eb;
-  border-radius: 2px;
-  overflow: hidden;
-`;
-
-const ProgressBar = styled(motion.div)`
-  height: 100%;
-  background: linear-gradient(90deg, #10b981, #34d399);
-`;
-
-const RedirectText = styled.p`
-  color: #9ca3af;
-  font-size: 0.875rem;
-  margin-top: 0.75rem;
-`;
+import React, { useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
+import Layout from '../components/Layouts/Layout';
+import FullPageLoader from '../components/FullPageLoader';
 
 const AuthSuccess = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+  const hasProcessed = useRef(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigate('/');
-    }, 3000);
+    if (hasProcessed.current) return;
+    
+    const handleAuthSuccess = async () => {
+      try {
+        hasProcessed.current = true;
+    
+        // Get token from URL parameters
+        const urlParams = new URLSearchParams(location.search);
+        const token = urlParams.get('token');
+        const error = urlParams.get('error');
 
-    return () => clearTimeout(timer);
-  }, [navigate]);
+        if (error) {
+          toast.error('Google authentication failed. Please try again.');
+          navigate('/login');
+          return;
+        }
+
+        if (token) {
+          console.log('Received token:', token.substring(0, 50) + '...');
+          
+          // Store the token
+          localStorage.setItem('authToken', token);
+          
+          // Decode the token to get user info (you might want to verify this on backend)
+          const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+          console.log('Token payload:', tokenPayload);
+          
+          // Store user info
+          const userInfo = {
+            _id: tokenPayload.id,
+            email: tokenPayload.email,
+            role: tokenPayload.role
+          };
+          
+          console.log('User info to store:', userInfo);
+          
+          localStorage.setItem('user', JSON.stringify(userInfo));
+          localStorage.setItem('userRole', tokenPayload.role);
+          
+          // Update auth context
+          login(userInfo, token);
+          
+          toast.success('Successfully logged in with Google!');
+          
+          // Redirect based on role
+          if (tokenPayload.role === 1) {
+            navigate('/admin/dashboard');
+          } else {
+            navigate('/');
+          }
+        } else {
+          toast.error('No authentication token received.');
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Auth success error:', error);
+        toast.error('Authentication failed. Please try again.');
+        navigate('/login');
+      }
+    };
+
+    handleAuthSuccess();
+  }, [location.search, navigate, login]);
 
   return (
-    <SuccessContainer>
-      <SuccessCard
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <IconWrapper
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{
-            duration: 0.5,
-            repeat: Infinity,
-            repeatType: "reverse"
-          }}
-        >
-          <FaCheckCircle />
-        </IconWrapper>
-        <Title>Success!</Title>
-        <Message>Your action was completed successfully</Message>
-        <ProgressBarContainer>
-          <ProgressBar
-            initial={{ width: "0%" }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 3, ease: "linear" }}
-          />
-        </ProgressBarContainer>
-        <RedirectText>Redirecting to home page...</RedirectText>
-      </SuccessCard>
-    </SuccessContainer>
+    <Layout title="Authentication Success">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-200 via-emerald-50 to-green-100">
+        <div className="text-center">
+          <FullPageLoader />
+          <p className="mt-4 text-emerald-700 font-medium">Completing authentication...</p>
+        </div>
+      </div>
+    </Layout>
   );
 };
 

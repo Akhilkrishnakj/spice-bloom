@@ -1,4 +1,4 @@
-import userModel from "../models/userModel.js";
+import User from "../models/userModel.js";
 import { hashPassword, comparePassword } from "../helpers/authHelper.js";
 import JWT from "jsonwebtoken";
 import dotenv from 'dotenv';
@@ -34,7 +34,7 @@ export const registerController = async (req, res) => {
     }
 
     // === Check if user already exists ===
-    const existingUser = await userModel.findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).send({
         success: false,
@@ -46,11 +46,21 @@ export const registerController = async (req, res) => {
     const hashedPassword = await hashPassword(password);
 
     // === Create user ===
-    const newUser = new userModel({
+    const newUser = new User({
       name,
       email,
       password: hashedPassword,
       phone,
+      wallet: 5000, // Signup bonus
+      transactions: [
+        {
+          type: 'bonus',
+          amount: 5000,
+          date: new Date(),
+          description: 'Signup Bonus',
+          balanceAfter: 5000
+        }
+      ]
     });
 
     await newUser.save();
@@ -100,11 +110,19 @@ export const loginController = async (req, res) => {
     }
 
     // Check if user exists
-    const user = await userModel.findOne({ email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).send({
         success: false,
         message: "User not found",
+      });
+    }
+
+    // Blocked user check
+    if (user.blocked) {
+      return res.status(403).send({
+        success: false,
+        message: "Your account is blocked. Please contact support.",
       });
     }
 
@@ -122,7 +140,7 @@ export const loginController = async (req, res) => {
       expiresIn: "7d",
     });
 
-    // Send response
+    // Send response to frontend
     res.status(200).send({
       success: true,
       message: "Login successful",

@@ -14,7 +14,7 @@ const VerifyOTP = () => {
   const inputRefs = useRef([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login ,setUser} = useAuth();
+  const { login } = useAuth();
   const name = location.state?.name || '';
   const email = location.state?.email || '';
   const phone = location.state?.phone || '';
@@ -74,47 +74,44 @@ const VerifyOTP = () => {
     inputRefs.current[pasted.length - 1]?.focus();
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const otpCode = otp.join('');
-    if (otpCode.length !== 6) {
-      setError('Please enter complete 6-digit OTP');
-      return;
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  const otpCode = otp.join('');
+  if (otpCode.length !== 6) {
+    setError('Please enter complete 6-digit OTP');
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const res = await axios.post('/api/v1/auth/verify-otp', {
+      name,
+      email,
+      phone,
+      otp: otpCode,
+      password
+    });
+
+    console.log("Sending to server:", { name, email, phone, otp: otpCode, password });
+    console.log("Server response:", res.data);
+
+    if (res && res.data && res.data.success === true) {
+      login(res.data.user, res.data.token);  // ✅ use login function only
+      toast.success('Account verified successfully!');
+      navigate('/success');
+    } else {
+      console.warn("Unexpected server data:", res.data);
+      setError(res.data.message || 'Invalid OTP');
     }
 
-    setLoading(true);
-    try {
-      const res = await axios.post('/api/v1/auth/verify-otp', {
-        name,
-        email,
-        phone,
-        otp: otpCode,
-        password
-      });
+  } catch (err) {
+    console.error("Axios error:", err);
+    setError(err.response?.data?.message || 'OTP verification failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
-      console.log("Sending to server:", { name, email, phone, otp: otpCode, password });
-
-
-      if (res.data.success) {
-        // ✅ Save token and user to localStorage
-          localStorage.setItem('token', res.data.token);
-          localStorage.setItem('user', JSON.stringify(res.data.user));
-   
-       // ✅ Set user in context
-           setUser(res.data.user);
-   
-        toast.success('Account verified successfully!');
-        login(res.data.user);
-        navigate('/success');
-      } else {
-        setError(res.data.message || 'Invalid OTP');
-      }
-    } catch (err) {
-      setError('OTP verification failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
  
   const handleResend = async () => {
     try {

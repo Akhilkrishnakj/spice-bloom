@@ -7,6 +7,8 @@
 /* font-family: 'Poppins' ,sans-serif; */
 /*   font-family: "Playfair", serif; */
 
+
+
 /*============================================= Login page styles ======================*/
 
 /* Background wrapper for the login page */
@@ -2437,3 +2439,4 @@ input:checked + .slider:before {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
