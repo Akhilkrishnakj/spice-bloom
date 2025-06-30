@@ -35,6 +35,8 @@ import googleRoute from './routes/googleRoute.js';
 // Config dotenv
 console.log("✅ TEST ENV:", process.env.NODEMAILER_EMAIL, process.env.NODEMAILER_PASSWORD);
 
+import MongoStore from 'connect-mongo';
+
 // Initialize Passport configuration
 passport.use(
   new GoogleStrategy(
@@ -151,14 +153,25 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.set("trust proxy", 1); 
+
 
 // Session configuration for Passport
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: false } // Set to true if using HTTPS
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URL,
+      collectionName: 'sessions',
+    }),
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      httpOnly: true,
+    },
+  })
+);
 
 // Initialize Passport
 app.use(passport.initialize());
