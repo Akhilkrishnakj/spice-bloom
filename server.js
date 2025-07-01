@@ -166,6 +166,9 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// Add CORS headers for preflight requests
+app.options('*', cors());
 app.use(cors({
   origin: [
     "http://localhost:3000",          
@@ -198,8 +201,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Main Routes
+console.log('🔧 Registering routes...');
 app.use('/api/v1/auth', authRoute);
+console.log('✅ Auth routes registered');
 app.use('/api/v1/auth', googleRoute);
+console.log('✅ Google routes registered');
 app.use('/api/v1/product', productRoute);
 app.use('/api/v1/admin', adminRoute);
 app.use('/api/v1/category', categoryRoute);
@@ -234,6 +240,8 @@ app.use('/api/v1/auth/login', (req, res, next) => {
   }
   next();
 });
+
+
 
 // Start auto-cancel background job
 autoCancelUnpaidCOD();

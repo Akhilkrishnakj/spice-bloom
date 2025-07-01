@@ -1,33 +1,10 @@
-import axios from 'axios';
-
-// Helper to get the token from localStorage
-const getToken = () => localStorage.getItem('authToken') || localStorage.getItem('token') || '';
-
-// Create an Axios instance (optional, for future config)
-const API = axios.create({
-  baseURL: '/api/v1',
-});
+import api from './axios.js';
 
 // GET all addresses
-export const fetchAddresses = () =>
-  API.get('/address', {
-    headers: {
-      Authorization: `Bearer ${getToken()}`
-    }
-  });
+export const fetchAddresses = () => api.get('/address');
 
 // POST new address
-export const createAddress = (data) =>
-  API.post('/address', data, {
-    headers: {
-      Authorization: `Bearer ${getToken()}`
-    }
-  });
+export const createAddress = (data) => api.post('/address', data);
 
 // DELETE address
-export const deleteAddress = (id) =>
-  API.delete(`/address/${id}`, {
-    headers: {
-      Authorization: `Bearer ${getToken()}`
-    }
-  });
+export const deleteAddress = (id) => api.delete(`/address/${id}`);

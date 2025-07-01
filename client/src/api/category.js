@@ -1,9 +1,7 @@
 // /src/api/category.js
-import axios from 'axios';
+import api from './axios.js';
 
-const API = "/api/v1/category";
-
-export const createCategory = (data) => axios.post(`${API}/create`, data);
-export const getAllCategories = () => axios.get(`${API}/get-category`);
-export const deleteCategory = (id) => axios.delete(`${API}/delete/${id}`);
-export const updateCategory = (id, data) => axios.put(`${API}/update/${id}`, data);
+export const createCategory = (data) => api.post('/category/create', data);
+export const getAllCategories = () => api.get('/category/get-category');
+export const deleteCategory = (id) => api.delete(`/category/delete/${id}`);
+export const updateCategory = (id, data) => api.put(`/category/update/${id}`, data);

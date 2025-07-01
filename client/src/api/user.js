@@ -3,7 +3,7 @@ import api from './axios.js';
 // Get current user profile
 export const getCurrentUser = async () => {
   try {
-    const response = await api.get('/api/v1/user/me');
+    const response = await api.get('/user/me');
     return response.data;
   } catch (error) {
     throw error;
@@ -13,7 +13,7 @@ export const getCurrentUser = async () => {
 // Update user profile
 export const updateUserProfile = async (userData) => {
   try {
-    const response = await api.put('/api/v1/user/update-profile', userData);
+    const response = await api.put('/user/update-profile', userData);
     return response.data;
   } catch (error) {
     throw error;
@@ -23,7 +23,7 @@ export const updateUserProfile = async (userData) => {
 // Get user statistics
 export const getUserStats = async () => {
   try {
-    const response = await api.get('/api/v1/user/stats');
+    const response = await api.get('/user/stats');
     return response.data;
   } catch (error) {
     throw error;
@@ -33,7 +33,7 @@ export const getUserStats = async () => {
 // Get user profile (basic info)
 export const getUserProfile = async () => {
   try {
-    const response = await api.get('/api/v1/user/profile');
+    const response = await api.get('/user/profile');
     return response.data;
   } catch (error) {
     throw error;

@@ -2,6 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL || 'https://spicebloom.vercel.app/api/v1',
   timeout: 10000,
 });
 

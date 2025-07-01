@@ -45,7 +45,8 @@ function App() {
       try {
         setLoading(true);
         setError(null);
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/product/get-product`);
+        const apiUrl = process.env.REACT_APP_API_URL || 'https://spicebloom.vercel.app/api/v1';
+        const response = await axios.get(`${apiUrl}/product/get-product`);
         console.log("Full API Response:", response.data);
 
         let productsData;

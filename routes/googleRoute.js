@@ -10,7 +10,7 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 // Callback after Google login
 router.get('/google/callback',
   passport.authenticate('google', {
-    failureRedirect: 'http://localhost:3000/login?error=google_auth_failed',
+    failureRedirect: `${process.env.FRONTEND_URL || 'https://spicebloom.vercel.app'}/login?error=google_auth_failed`,
     session: false
   }),
   (req, res) => {
@@ -35,15 +35,17 @@ router.get('/google/callback',
       console.log('Generated JWT token:', token.substring(0, 50) + '...');
 
       // Redirect to frontend with token
+      const frontendUrl = process.env.FRONTEND_URL || 'https://spicebloom.vercel.app';
       const redirectUrl = req.user.role === 1 // 1 for admin
-        ? `http://localhost:3000/admin/dashboard?token=${token}`
-        : `http://localhost:3000/success?token=${token}`;
+        ? `${frontendUrl}/admin/dashboard?token=${token}`
+        : `${frontendUrl}/success?token=${token}`;
       
       console.log('Redirecting to:', redirectUrl);
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('Google auth callback error:', error);
-      res.redirect('http://localhost:3000/login?error=token_generation_failed');
+      const frontendUrl = process.env.FRONTEND_URL || 'https://spicebloom.vercel.app';
+      res.redirect(`${frontendUrl}/login?error=token_generation_failed`);
     }
   }
 );
