@@ -156,6 +156,16 @@ connectDB();
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`🔍 ${req.method} ${req.url} - ${new Date().toISOString()}`);
+  console.log('Headers:', req.headers);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Body:', req.body);
+  }
+  next();
+});
 app.use(cors({
   origin: [
     "http://localhost:3000",          
@@ -206,6 +216,23 @@ app.use('/api/v1/coupon', couponRoute);
 // Default route
 app.get('/', (req, res) => {
   res.send('<h1>Welcome to SpiceMart Website</h1>');
+});
+
+// Test route for debugging
+app.get('/api/v1/test', (req, res) => {
+  res.json({ message: 'API is working', timestamp: new Date().toISOString() });
+});
+
+// Handle 405 errors
+app.use('/api/v1/auth/login', (req, res, next) => {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ 
+      error: 'Method Not Allowed', 
+      allowedMethods: ['POST'],
+      message: 'Only POST method is allowed for login'
+    });
+  }
+  next();
 });
 
 // Start auto-cancel background job
