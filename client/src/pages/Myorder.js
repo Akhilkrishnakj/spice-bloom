@@ -87,12 +87,12 @@ function App() {
   const [returnDescription, setReturnDescription] = useState('');
   const [submittingReturn, setSubmittingReturn] = useState(false);
   const navigate = useNavigate();
-
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const token = contextToken || localStorage.getItem('authToken');
-        const { data } = await axios.get('/api/v1/order/my-orders', {
+        const { data } = await axios.get(`${API_BASE_URL}/order/my-orders`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -711,7 +711,7 @@ function App() {
     setCancellingOrder(orderId);
     try {
       const token = contextToken || localStorage.getItem('authToken');
-      const { data } = await axios.post('/api/v1/order/cancel', {
+      const { data } = await axios.post(`${API_BASE_URL}/order/cancel`, {
         orderId: orderId,
         reason: 'Cancelled by user'
       }, {
@@ -758,7 +758,7 @@ function App() {
     setSubmittingReturn(true);
     try {
       const token = contextToken || localStorage.getItem('authToken');
-      const { data } = await axios.post('/api/v1/order/return/request', {
+      const { data } = await axios.post(`${API_BASE_URL}/order/return/request`, {
         orderId: showReturnModal.order._id,
         itemIndex: showReturnModal.itemIndex,
         reason: returnReason,

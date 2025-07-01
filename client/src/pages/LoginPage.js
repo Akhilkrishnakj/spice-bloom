@@ -14,7 +14,7 @@ const LoginPage = ({ message }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'https://spicebloom.vercel.app/api/v1';
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
       const res = await axios.post(`${apiUrl}/auth/login`, { email, password });
       if (res && res.data.success) {
         const { token, user } = res.data;

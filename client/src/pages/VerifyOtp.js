@@ -20,6 +20,7 @@ const VerifyOTP = () => {
   const phone = location.state?.phone || '';
   console.log('location state:', location.state);
   const password = location.state?.password || localStorage.getItem("verifyPassword");
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
 
 
 
@@ -84,7 +85,7 @@ const VerifyOTP = () => {
 
   setLoading(true);
   try {
-    const res = await axios.post('/api/v1/auth/verify-otp', {
+    const res = await axios.post(`${apiUrl}/auth/verify-otp`, {
       name,
       email,
       phone,
@@ -115,7 +116,7 @@ const VerifyOTP = () => {
  
   const handleResend = async () => {
     try {
-      await axios.post('/api/v1/auth/send-otp', { email, phone });
+      await axios.post(`${apiUrl}/auth/send-otp`, { email, phone });
       toast.success('OTP resent successfully');
       startResendTimer();
     } catch (err) {
