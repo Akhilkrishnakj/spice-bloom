@@ -93,13 +93,17 @@ passport.deserializeUser(async (id, done) => {
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server,{
-  cors:{
-    origin: "http://localhost:3000",
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "https://spicebloom.vercel.app"
+    ],
     methods: ["GET", "POST"],
-    
+    credentials: true
   },
-})
+});
+
 
 // 🚚 Enhanced Socket.IO with tracking functionality
 io.on("connection",(socket)=>{
@@ -152,7 +156,13 @@ connectDB();
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:3000",          
+    "https://spicebloom.vercel.app"    
+  ],
+  credentials: true
+}));
 app.set("trust proxy", 1); 
 
 

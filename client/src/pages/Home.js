@@ -45,12 +45,11 @@ function App() {
       try {
         setLoading(true);
         setError(null);
-        
-        const response = await axios.get('/api/v1/product/get-product');
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/product/get-product`);
         console.log("Full API Response:", response.data);
-        
+
         let productsData;
-        
+
         // Handle different response structures
         if (response.data.products && Array.isArray(response.data.products)) {
           productsData = response.data.products;
