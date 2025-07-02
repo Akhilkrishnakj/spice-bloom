@@ -229,17 +229,6 @@ app.get('/api/v1/test', (req, res) => {
   res.json({ message: 'API is working', timestamp: new Date().toISOString() });
 });
 
-// Handle 405 errors
-app.use('/api/v1/auth/login', (req, res, next) => {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      error: 'Method Not Allowed', 
-      allowedMethods: ['POST'],
-      message: 'Only POST method is allowed for login'
-    });
-  }
-  next();
-});
 
 
 

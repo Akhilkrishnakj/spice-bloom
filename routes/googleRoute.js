@@ -10,7 +10,7 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 // Callback after Google login
 router.get('/google/callback',
   passport.authenticate('google', {
-    failureRedirect: `${process.env.FRONTEND_URL || 'https://spicebloom.vercel.app'}/login?error=google_auth_failed`,
+    failureRedirect: `${process.env.REACT_APP_URL}/login?error=google_auth_failed`,
     session: false
   }),
   (req, res) => {
