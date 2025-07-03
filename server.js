@@ -13,7 +13,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from './models/userModel.js';
 
 import connectDB from './config/db.js';
-import { autoCancelUnpaidCOD } from './utils/ autoCancelCOS.js';
+import { autoCancelUnpaidCOD } from './utils/autoCancelCOS.js';
 import trackingService from './utils/trackingService.js';
 
 // Routes

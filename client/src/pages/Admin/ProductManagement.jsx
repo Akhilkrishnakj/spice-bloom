@@ -66,7 +66,7 @@ const ProductManagement = () => {
       price: product.price,
       quantity: product.quantity,
       description: product.description,
-      category: product.category?._id || '',
+      category: product.category?.id || '', // <-- FIXED
     });
   };
 
@@ -77,6 +77,12 @@ const ProductManagement = () => {
       if (data?.success) {
         toast.success('Product deleted successfully');
         fetchProducts();
+        // Pagination edge case fix:
+        setTimeout(() => {
+          if (currentProducts.length === 1 && currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+          }
+        }, 0);
       } else {
         toast.error('Failed to delete product');
       }
@@ -252,7 +258,11 @@ const ProductManagement = () => {
                     <img src={editingProduct.images[0]} alt="Current" className="mt-2 h-16 w-16 object-cover rounded-lg border border-emerald-100" />
                   )}
                   {formData.image && (
-                    <span className="block mt-2 text-xs text-emerald-500">New image selected</span>
+                    <img
+                      src={URL.createObjectURL(formData.image)}
+                      alt="Preview"
+                      className="mt-2 h-16 w-16 object-cover rounded-lg border border-emerald-100"
+                    />
                   )}
                 </div>
                 <div className="flex justify-end">

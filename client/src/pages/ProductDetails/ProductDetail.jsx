@@ -39,10 +39,13 @@ const ProductDetail = () => {
   // Check if user is logged in and has valid token
   const isAuthenticated = user && localStorage.getItem('authToken');
 
+  const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const { data } = await axios.get(`/api/v1/product/get-product/${id}`);
+        const { data } = await axios.get(`${API_BASE_URL}/product/get-product/${id}`);
         if (data.success) {
           setProduct(data.product);
           setReviews(data.product.reviews || []);

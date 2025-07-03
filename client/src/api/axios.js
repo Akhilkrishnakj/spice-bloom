@@ -1,12 +1,11 @@
 import axios from 'axios';
 
-// Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://spicebloom.vercel.app/api/v1',
+  baseURL: process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1',
   timeout: 10000,
+  withCredentials: true, // only if using cookies/sessions
 });
 
-// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
@@ -15,19 +14,13 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle common errors
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
       localStorage.removeItem('userRole');
@@ -37,4 +30,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api; 
+export default api;

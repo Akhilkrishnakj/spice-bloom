@@ -421,7 +421,10 @@ const handleAddToCart = (product) => {
                     <h3 className="text-3xl font-bold mb-3">{category.name}</h3>
                     <p className="text-gray-200 text-lg mb-2">{category.description}</p>
                     <p className="text-emerald-300 font-medium mb-6">{category.products}</p>
-                    <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all transform hover:scale-105">
+                    <button
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all transform hover:scale-105"
+                      onClick={() => navigate(`/shop?category=${encodeURIComponent(category.name)}`)}
+                    >
                       Shop {category.name}
                     </button>
                   </div>
@@ -442,26 +445,11 @@ const handleAddToCart = (product) => {
             </p>
           </div>
 
-          {/* Debug Info - Remove this in production
-          {process.env.NODE_ENV === 'development' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-              <h3 className="font-bold text-blue-800 mb-2">Debug Information:</h3>
-              <div className="text-sm text-blue-700 space-y-1">
-                <p>Total Products: {products.length}</p>
-                <p>Blends: {blends.length}</p>
-                <p>Spices: {spices.length}</p>
-                <p>Home Products: {homeProducts.length}</p>
-                <p>Loading: {loading ? 'Yes' : 'No'}</p>
-                {error && <p className="text-red-600">Error: {error}</p>}
-              </div>
-            </div>
-          )} */}
 
           {loading ? (
             <FullPageLoader />
           ) : error ? (
-            <div className="text-center py-12">npm install
-
+            <div className="text-center py-12">
               <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
                 <p className="text-red-600 text-lg font-semibold mb-2">Failed to load products</p>
                 <p className="text-red-500 text-sm">{error}</p>

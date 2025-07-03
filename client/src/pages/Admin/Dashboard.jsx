@@ -42,7 +42,7 @@ const ErrorMessage = ({ message, onRetry }) => (
 );
 
 // API service functions
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1';
 
 const apiService = {
   // Dashboard stats
@@ -222,7 +222,7 @@ function App() {
   // Fetch sales trend data
   const fetchSalesTrend = async () => {
     try {
-      let url = `/api/v1/dashboard/sales-trend?period=${period}`;
+      let url = `${API_BASE_URL}/dashboard/sales-trend?period=${period}`;
       if (selectedDate && period === 'day') {
         url += `&date=${selectedDate}`;
       }
@@ -413,10 +413,9 @@ function App() {
     }
   };
 
-  // Fetch new users trend data
   const fetchNewUsersTrend = async () => {
     try {
-      let url = `/api/v1/dashboard/new-users-trend?period=${newUsersPeriod}`;
+      let url = `${API_BASE_URL}/dashboard/new-users-trend?period=${newUsersPeriod}`;
       if (selectedDate && newUsersPeriod === 'day') {
         url += `&date=${selectedDate}`;
       }
@@ -639,8 +638,8 @@ function App() {
                   </thead>
                   <tbody>
                     {recentOrders.slice(0, 5).map((order) => (
-                      <tr key={order.id} className="border-b last:border-b-0 hover:bg-emerald-50/40 transition">
-                        <td className="p-3 font-mono">{order.id}</td>
+                      <tr key={order._id || order.id} className="border-b last:border-b-0 hover:bg-emerald-50/40 transition">
+                        <td className="p-3 font-mono">{order._id || order.id}</td>
                         <td className="p-3">
                           <div>
                             <div className="font-semibold">{order.customer?.name || order.customer}</div>

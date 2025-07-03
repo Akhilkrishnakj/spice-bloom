@@ -20,7 +20,8 @@ const Returns = () => {
     setupSocketListeners();
     
     return () => {
-      socket.disconnect();
+      socket.emit('leave-admin-room'); // <-- FIXED: leave room, don't disconnect socket
+      // socket.disconnect(); // <-- REMOVE this line
     };
   }, []);
 
@@ -420,4 +421,4 @@ const Returns = () => {
   );
 };
 
-export default Returns; 
+export default Returns;

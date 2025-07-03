@@ -44,7 +44,7 @@ const Orders = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get('/api/v1/admin/orders', {
+      const { data } = await axios.get('/admin/orders', {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
       });
       setOrders(data.orders || []);
@@ -259,7 +259,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
   const handleStatusChange = async (newStatus) => {
     setUpdatingStatus(true);
     try {
-      const { data } = await axios.put(`/api/v1/admin/orders/${order._id}`, { status: newStatus }, {
+      const { data } = await axios.put(`/admin/orders/${order._id}`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
       });
       if (data.success) {
@@ -380,8 +380,8 @@ const OrderDetailsModal = ({ order, onClose }) => {
           <div className="mt-6">
             <h3 className="font-bold text-green-900 mb-2">Order Items</h3>
             <ul className="divide-y divide-green-50">
-              {order.items?.map((item, idx) => (
-                <li key={idx} className="py-2 flex justify-between items-center">
+              {order.items?.map((item) => (
+                <li key={item._id || item.productId} className="py-2 flex justify-between items-center">
                   <span className="text-green-800">{item.name} x {item.quantity}</span>
                   <span className="font-bold text-green-900">₹{(item.price * item.quantity).toFixed(2)}</span>
                 </li>

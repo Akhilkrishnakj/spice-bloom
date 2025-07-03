@@ -1,48 +1,15 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
-    }
+    { "src": "server.js", "use": "@vercel/node" },
+    { "src": "client/package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } }
   ],
   "routes": [
-    {
-      "src": "/api/test",
-      "dest": "/api/test.js"
-    },
-    {
-      "src": "/api/v1/auth/login",
-      "dest": "/api/v1/auth/login.js"
-    },
-    {
-      "src": "/api/v1/auth/send-otp",
-      "dest": "/api/v1/auth/send-otp.js"
-    },
-    {
-      "src": "/api/v1/(.*)",
-      "dest": "/api/[...path].js"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/[...path].js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/server.js"
-    }
+    { "src": "/api/(.*)", "dest": "/server.js" },
+    { "src": "/(.*)", "dest": "/client/$1" }
   ],
   "functions": {
-    "api/**/*.js": {
-      "maxDuration": 30
-    },
-    "server.js": {
-      "maxDuration": 30
-    }
+    "server.js": { "maxDuration": 30 }
   },
   "env": {
     "NODE_ENV": "production"

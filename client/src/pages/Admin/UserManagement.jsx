@@ -16,6 +16,8 @@ import {
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+
 const MiniLoader = () => (
   <div className="flex justify-center items-center"><span className="inline-block h-4 w-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span></div>
 );
@@ -36,7 +38,7 @@ const UserManagement = () => {
       // Use consistent key - either 'authToken' or 'token' everywhere
       const token = localStorage.getItem('authToken'); // ✅ You're using 'authToken' here
       
-      const res = await axios.get('http://localhost:8080/api/v1/admin', {
+      const res = await axios.get(`${API_BASE_URL}/api/v1/admin`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -105,7 +107,7 @@ const UserManagement = () => {
     setActionLoading(l => ({ ...l, [id]: true }));
     try {
       const token = localStorage.getItem('authToken');
-      await axios.patch(`http://localhost:8080/api/v1/admin/users/${id}/promote`, {}, {
+      await axios.patch(`${API_BASE_URL}/api/v1/admin/users/${id}/promote`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('User promoted to admin');
@@ -122,7 +124,7 @@ const UserManagement = () => {
     setActionLoading(l => ({ ...l, [id]: true }));
     try {
       const token = localStorage.getItem('authToken');
-      await axios.patch(`http://localhost:8080/api/v1/admin/users/${id}/block`, { blocked: !blocked }, {
+      await axios.patch(`${API_BASE_URL}/api/v1/admin/users/${id}/block`, { blocked: !blocked }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success(blocked ? 'User unblocked' : 'User blocked');
@@ -140,7 +142,7 @@ const UserManagement = () => {
         // Fix: Use 'authToken' instead of 'token' for consistency
         const token = localStorage.getItem('authToken'); // ✅ Changed from 'token' to 'authToken'
         
-        await axios.delete(`http://localhost:8080/api/v1/admin/users/${id}`, {
+        await axios.delete(`${API_BASE_URL}/api/v1/admin/users/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
