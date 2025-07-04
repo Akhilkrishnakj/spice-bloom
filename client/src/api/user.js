@@ -1,41 +1,46 @@
 import api from './axios.js';
 
-// Get current user profile
 export const getCurrentUser = async () => {
   try {
-    const response = await api.get('/user/me');
+    const token = localStorage.getItem('authToken');
+    const response = await api.get('/user/me', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
+    console.error("Error fetching current user:", error);
     throw error;
   }
 };
 
-// Update user profile
 export const updateUserProfile = async (userData) => {
   try {
-    const response = await api.put('/user/update-profile', userData);
+    const token = localStorage.getItem('authToken');
+    const response = await api.put('/user/update-profile', userData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
+    console.error("Error updating profile:", error);
     throw error;
   }
 };
 
-// Get user statistics
 export const getUserStats = async () => {
   try {
-    const response = await api.get('/user/stats');
+    const token = localStorage.getItem('authToken');
+    const response = await api.get('/user/stats', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
+    console.error("Error fetching user stats:", error);
     throw error;
   }
 };
-
-// Get user profile (basic info)
-export const getUserProfile = async () => {
-  try {
-    const response = await api.get('/user/profile');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-}; 
