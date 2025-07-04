@@ -3,7 +3,6 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1',
   timeout: 10000,
-  withCredentials: true, // only if using cookies/sessions
 });
 
 api.interceptors.request.use(
@@ -12,6 +11,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    config.headers.Accept = 'application/json';
     return config;
   },
   (error) => Promise.reject(error)
