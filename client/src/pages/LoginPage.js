@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {  useState } from 'react';
 import Layout from '../components/Layouts/Layout';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -11,10 +11,11 @@ const LoginPage = ({ message }) => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1';
+      const apiUrl = process.env.REACT_APP_API_URL || 'https://localhost:8080/api/v1';
       const res = await axios.post(`${apiUrl}/auth/login`, { email, password });
       if (res && res.data.success) {
         const { token, user } = res.data;

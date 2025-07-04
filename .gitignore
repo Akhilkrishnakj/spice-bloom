@@ -1,2 +1,11 @@
 .env
 .env
+
+# Bugster
+.bugster/results/
+.bugster/screenshots/
+.bugster/videos/
+.bugster/logs/
+.bugster/reports/
+*.bugster.log
+

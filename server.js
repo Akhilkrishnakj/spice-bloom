@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
-
 import express from 'express';
+const app = express(); // <-- Move this here!
 import colors from 'colors';
 import morgan from 'morgan';
 import cors from 'cors';
@@ -9,6 +9,8 @@ import http from 'http';
 import { Server } from 'socket.io';
 import passport from 'passport';
 import session from 'express-session';
+
+app.use(express.json()); // <-- Now this is after app is defined
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from './models/userModel.js';
 
@@ -90,7 +92,6 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // Create app
-const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -154,7 +155,6 @@ connectDB();
 
 // Middleware
 app.use(morgan('dev'));
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Debug middleware to log all requests

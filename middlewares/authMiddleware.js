@@ -3,6 +3,7 @@ import userModel from '../models/userModel.js'; // ✅ correct import
 
 export const requireSignIn = async (req, res, next) => {
   try {
+    console.log("Auth header:", req.headers.authorization);
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res.status(401).json({ success: false, message: "No token provided" });

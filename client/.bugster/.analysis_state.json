@@ -1,0 +1,12 @@
+{
+  "status": "failed",
+  "started_at": "2025-07-04T09:33:51.676373",
+  "version": "1.0",
+  "completed": false,
+  "failed_at": "2025-07-04T09:33:59.496057",
+  "duration_seconds": 7.819695,
+  "error": {
+    "type": "BugsterError",
+    "message": "No supported framework found"
+  }
+}
