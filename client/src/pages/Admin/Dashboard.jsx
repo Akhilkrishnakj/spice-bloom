@@ -85,7 +85,7 @@ const apiService = {
   async getUserProfile() {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_BASE_URL}/user/profile`, {
+      const response = await fetch(`${API_BASE_URL}/user/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
