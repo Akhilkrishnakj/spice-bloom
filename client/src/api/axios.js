@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL, // ✅ no fallback
+  baseURL: 'https://spice-bloom.onrender.com/api/v1', // FORCE FIX: Hardcode correct backend URL
   timeout: 10000,
 });
-console.log("API Base URL axios:", process.env.REACT_APP_API_URL);
+console.log("API Base URL axios:", 'https://spice-bloom.onrender.com/api/v1');
 
 
 api.interceptors.request.use(
