@@ -32,6 +32,7 @@ import Myorder from './pages/Myorder';
 import Wallet from './pages/Wallet';
 import FullPageLoader from './components/FullPageLoader';
 
+console.log("🚀 APP.JS LOADED - New deployment active!");
 console.log("Base API URL:", process.env.REACT_APP_API_URL);
 
 

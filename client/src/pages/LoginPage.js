@@ -17,6 +17,7 @@ const LoginPage = ({ message }) => {
     try {
       // FORCE FIX: Hardcode the correct backend URL
       const apiUrl = 'https://spice-bloom.onrender.com/api/v1';
+      console.log("🚀 NEW CODE LOADED - Using correct backend URL!");
       console.log("🔍 Environment variable REACT_APP_API_URL:", process.env.REACT_APP_API_URL);
       console.log("🔍 Final API URL being used:", apiUrl);
       console.log("🔍 Full login URL:", `${apiUrl}/auth/login`);
