@@ -15,12 +15,14 @@ const LoginPage = ({ message }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // FORCE FIX: Hardcode the correct backend URL
+      // 🚨 FORCE FIX: This should definitely use the backend URL now!
       const apiUrl = 'https://spice-bloom.onrender.com/api/v1';
       console.log("🚀 NEW CODE LOADED - Using correct backend URL!");
+      console.log("🚨 DEPLOYMENT TEST - This should show in live site!");
       console.log("🔍 Environment variable REACT_APP_API_URL:", process.env.REACT_APP_API_URL);
       console.log("🔍 Final API URL being used:", apiUrl);
       console.log("🔍 Full login URL:", `${apiUrl}/auth/login`);
+      console.log("🚨 API CALL SHOULD GO TO BACKEND NOW!");
       const res = await axios.post(`${apiUrl}/auth/login`, { email, password });
       if (res && res.data.success) {
         const { token, user } = res.data;
@@ -52,7 +54,7 @@ const LoginPage = ({ message }) => {
   };
 
   return (
-    <Layout title="Login | Spice Bloom" description="Login to your Spice Bloom account and explore a world of flavors!">
+    <Layout title="Login | Spice Bloom - FIXED BACKEND URL" description="Login to your Spice Bloom account and explore a world of flavors!">
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-200 via-emerald-50 to-green-100 py-10 px-2">
         <div className="w-full max-w-md rounded-3xl bg-white/70 backdrop-blur-xl shadow-2xl border border-emerald-100 p-8 md:p-10 flex flex-col gap-6 animate-fade-in-up">
           <h1 className="text-3xl font-extrabold text-center bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent mb-2 tracking-tight">Spice Bloom</h1>
