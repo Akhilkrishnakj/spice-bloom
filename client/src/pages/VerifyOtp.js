@@ -20,7 +20,7 @@ const VerifyOTP = () => {
   const phone = location.state?.phone || '';
   console.log('location state:', location.state);
   const password = location.state?.password || localStorage.getItem("verifyPassword");
-  const apiUrl = process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1';
+  const apiUrl = 'https://spice-bloom.onrender.com/api/v1';
 
 
 
