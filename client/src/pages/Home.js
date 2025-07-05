@@ -45,7 +45,7 @@ function App() {
       try {
         setLoading(true);
         setError(null);
-        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
+        const apiUrl = process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1';
         const response = await axios.get(`${apiUrl}/product/get-product`);
         console.log("Full API Response:", response.data);
 

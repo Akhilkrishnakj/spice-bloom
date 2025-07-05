@@ -87,7 +87,7 @@ function App() {
   const [returnDescription, setReturnDescription] = useState('');
   const [submittingReturn, setSubmittingReturn] = useState(false);
   const navigate = useNavigate();
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1';
   useEffect(() => {
     const fetchOrders = async () => {
       try {

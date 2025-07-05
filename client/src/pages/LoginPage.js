@@ -15,7 +15,7 @@ const LoginPage = ({ message }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'https://localhost:8080/api/v1';
+      const apiUrl = process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1';
       console.log("Login using API URL:", apiUrl);
       const res = await axios.post(`${apiUrl}/auth/login`, { email, password });
       if (res && res.data.success) {
