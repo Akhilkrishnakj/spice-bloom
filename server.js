@@ -220,9 +220,9 @@ app.use('/api/v1/notifications', notificationRoute);
 app.use('/api/v1/wallet', walletRoute);
 app.use('/api/v1/coupon', couponRoute);
 
-// Default route
-app.get('/', (req, res) => {
-  res.send('<h1>Welcome to SpiceMart Website</h1>');
+// API Health check route
+app.get('/api/v1/health', (req, res) => {
+  res.json({ message: 'API is working', timestamp: new Date().toISOString() });
 });
 
 // Test route for debugging
@@ -230,8 +230,20 @@ app.get('/api/v1/test', (req, res) => {
   res.json({ message: 'API is working', timestamp: new Date().toISOString() });
 });
 
+// Catch-all route for API - return 404 for unknown API routes
+app.get('/api/*', (req, res) => {
+  res.status(404).json({ message: 'API route not found' });
+});
 
-
+// Root route - API info only
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'SpiceMart API Server', 
+    version: '1.0.0',
+    endpoints: '/api/v1/*',
+    timestamp: new Date().toISOString() 
+  });
+});
 
 // Start auto-cancel background job
 autoCancelUnpaidCOD();
