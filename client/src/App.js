@@ -32,6 +32,9 @@ import Myorder from './pages/Myorder';
 import Wallet from './pages/Wallet';
 import FullPageLoader from './components/FullPageLoader';
 
+console.log("Base API URL:", process.env.REACT_APP_API_URL);
+
+
 function App() {
   const [loading, setLoading] = useState(true);
 
