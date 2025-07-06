@@ -1,4 +1,4 @@
-import React, {  useState } from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/Layouts/Layout';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';

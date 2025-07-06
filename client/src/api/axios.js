@@ -1,14 +1,18 @@
 import axios from 'axios';
 
+const BACKEND_URL = 'https://spice-bloom.onrender.com/api/v1';
+
 const api = axios.create({
-  baseURL: 'https://spice-bloom.onrender.com/api/v1', // FORCE FIX: Hardcode correct backend URL
+  baseURL: BACKEND_URL,
   timeout: 10000,
 });
-console.log("API Base URL axios:", 'https://spice-bloom.onrender.com/api/v1');
 
+console.log("🔧 API Base URL:", BACKEND_URL);
+console.log("🔧 Full axios config:", api.defaults);
 
 api.interceptors.request.use(
   (config) => {
+    console.log("🚀 Making request to:", config.baseURL + config.url);
     const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -18,18 +22,4 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('userRole');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default api;
+export default api

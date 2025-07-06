@@ -119,7 +119,7 @@ const apiService = {
 
   async fetchUsers() {
     try {
-      const res = await fetch("/api/v1/admin", {
+      const res = await fetch(`${API_BASE_URL}/admin`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
@@ -136,7 +136,7 @@ const apiService = {
   },
 
   async getSalesTrend(period = 'week') {
-    const response = await fetch(`/api/v1/dashboard/sales-trend?period=${period}`);
+    const response = await fetch(`${API_BASE_URL}/dashboard/sales-trend?period=${period}`);
     if (!response.ok) throw new Error('Failed to fetch sales trend');
     return await response.json();
   },
