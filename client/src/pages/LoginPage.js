@@ -2,7 +2,7 @@ import React, {  useState } from 'react';
 import Layout from '../components/Layouts/Layout';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = ({ message }) => {
@@ -15,15 +15,7 @@ const LoginPage = ({ message }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // 🚨 FORCE FIX: This should definitely use the backend URL now!
-      const apiUrl = 'https://spice-bloom.onrender.com/api/v1';
-      console.log("🚀 NEW CODE LOADED - Using correct backend URL!");
-      console.log("🚨 DEPLOYMENT TEST - This should show in live site!");
-      console.log("🔍 Environment variable REACT_APP_API_URL:", process.env.REACT_APP_API_URL);
-      console.log("🔍 Final API URL being used:", apiUrl);
-      console.log("🔍 Full login URL:", `${apiUrl}/auth/login`);
-      console.log("🚨 API CALL SHOULD GO TO BACKEND NOW!");
-      const res = await axios.post(`${apiUrl}/auth/login`, { email, password });
+      const res = await api.post('/auth/login', { email, password });
       if (res && res.data.success) {
         const { token, user } = res.data;
         localStorage.setItem("authToken", token);
