@@ -12,7 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import Header from '../components/Layouts/Header';
-import axios from 'axios';
+import api from '../api/axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { addToWishlist, removeFromWishlist } from '../redux/wishlistSlice.js';
 import { addToCart } from '../redux/cartSlice.js';
@@ -45,8 +45,7 @@ function App() {
       try {
         setLoading(true);
         setError(null);
-        const apiUrl = process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1';
-        const response = await axios.get(`${apiUrl}/product/get-product`);
+        const response = await api.get('/product/get-product');
         console.log("Full API Response:", response.data);
 
         let productsData;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Star, ShoppingCart, Heart, Truck, Shield, Award, Minus, Plus, ArrowLeft, Edit3 } from 'lucide-react';
 import Layout from '../../components/Layouts/Layout';
@@ -39,13 +39,10 @@ const ProductDetail = () => {
   // Check if user is logged in and has valid token
   const isAuthenticated = user && localStorage.getItem('authToken');
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || '';
-
-
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/product/get-product/${id}`);
+        const { data } = await api.get(`/product/get-product/${id}`);
         if (data.success) {
           setProduct(data.product);
           setReviews(data.product.reviews || []);
@@ -63,7 +60,7 @@ const ProductDetail = () => {
     const fetchRelated = async () => {
       if (product?.category?._id) {
         try {
-          const { data } = await axios.get(`/api/v1/product/related/${product.category._id}?productId=${product._id}`);
+          const { data } = await api.get(`/product/related/${product.category._id}?productId=${product._id}`);
           
           if (data.success) {
             setRelatedProducts(data.products);

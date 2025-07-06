@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
 import Layout from '../../components/Layouts/Layout';
 import { FiUpload, FiX, FiPlus, FiTrash2, FiChevronLeft } from 'react-icons/fi';
@@ -27,7 +27,7 @@ const Products = () => {
   useEffect(() => {
     const getAllCategories = async () => {
       try {
-        const { data } = await axios.get('/api/v1/category/get-category');
+        const { data } = await api.get('/category/get-category');
         setCategories(data?.category || []); // Fixed key
       } catch (error) {
         console.error(error);
@@ -90,7 +90,7 @@ const Products = () => {
         }
       });
 
-      const { data } = await axios.post('/api/v1/product/create-product', productFormData, {
+      const { data } = await api.post('/product/create-product', productFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

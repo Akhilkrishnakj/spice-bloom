@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import Layout from '../components/Layouts/Layout';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
 import api from '../api/axios';
 
 const Signup = () => {

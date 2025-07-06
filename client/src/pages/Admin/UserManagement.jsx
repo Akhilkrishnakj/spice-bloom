@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { 
   Trash2, 
   ShieldCheck, 
@@ -15,8 +15,6 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const MiniLoader = () => (
   <div className="flex justify-center items-center"><span className="inline-block h-4 w-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span></div>
@@ -35,14 +33,7 @@ const UserManagement = () => {
   // Fetch users from API
   const fetchUsers = async () => {
     try {
-      // Use consistent key - either 'authToken' or 'token' everywhere
-      const token = localStorage.getItem('authToken'); // ✅ You're using 'authToken' here
-      
-      const res = await axios.get(`${API_BASE_URL}/api/v1/admin`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const res = await api.get('/admin');
       setUsers(res.data.users);
     } catch (err) {
       console.error('Failed to fetch users:', err);
@@ -106,10 +97,7 @@ const UserManagement = () => {
   const promoteToAdmin = async (id) => {
     setActionLoading(l => ({ ...l, [id]: true }));
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.patch(`${API_BASE_URL}/api/v1/admin/users/${id}/promote`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.patch(`/admin/users/${id}/promote`);
       toast.success('User promoted to admin');
       fetchUsers();
     } catch (err) {
@@ -123,10 +111,7 @@ const UserManagement = () => {
   const toggleBlock = async (id, blocked) => {
     setActionLoading(l => ({ ...l, [id]: true }));
     try {
-      const token = localStorage.getItem('authToken');
-      await axios.patch(`${API_BASE_URL}/api/v1/admin/users/${id}/block`, { blocked: !blocked }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.patch(`/admin/users/${id}/block`, { blocked: !blocked });
       toast.success(blocked ? 'User unblocked' : 'User blocked');
       fetchUsers();
     } catch (err) {
@@ -139,14 +124,7 @@ const UserManagement = () => {
   const deleteUser = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        // Fix: Use 'authToken' instead of 'token' for consistency
-        const token = localStorage.getItem('authToken'); // ✅ Changed from 'token' to 'authToken'
-        
-        await axios.delete(`${API_BASE_URL}/api/v1/admin/users/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        await api.delete(`/admin/users/${id}`);
         setUsers(users.filter(u => u._id !== id));
       } catch (err) {
         console.error('Failed to delete user:', err);

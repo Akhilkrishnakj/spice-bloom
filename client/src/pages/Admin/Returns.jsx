@@ -3,7 +3,7 @@ import {
   RotateCcw, CheckCircle, XCircle, Package, DollarSign, Clock, 
   Eye, Filter, RefreshCw, AlertCircle, Users, Calendar, MapPin
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 import socket from '../../socket';
 import toast from 'react-hot-toast';
 
@@ -33,9 +33,7 @@ const Returns = () => {
   const fetchReturnRequests = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get('/api/v1/admin/returns', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
-      });
+      const { data } = await api.get('/admin/returns');
       setReturnRequests(data.returnRequests || []);
     } catch (error) {
       console.error('Failed to fetch return requests:', error);
@@ -48,13 +46,11 @@ const Returns = () => {
   const handleApproveReturn = async (returnData) => {
     setProcessingAction(true);
     try {
-      const { data } = await axios.post('/api/v1/admin/returns/approve', {
+      const { data } = await api.post('/admin/returns/approve', {
         orderId: returnData.orderId,
         itemIndex: returnData.itemIndex,
         returnShippingLabel: `RETURN-${returnData.orderNumber}-${returnData.itemIndex}`,
         notes: 'Return approved by admin'
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
 
       if (data.success) {
@@ -73,12 +69,10 @@ const Returns = () => {
   const handleRejectReturn = async (returnData) => {
     setProcessingAction(true);
     try {
-      const { data } = await axios.post('/api/v1/admin/returns/reject', {
+      const { data } = await api.post('/admin/returns/reject', {
         orderId: returnData.orderId,
         itemIndex: returnData.itemIndex,
         rejectionReason: 'Return request rejected by admin'
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
 
       if (data.success) {
@@ -97,12 +91,10 @@ const Returns = () => {
   const handleProcessRefund = async (returnData) => {
     setProcessingAction(true);
     try {
-      const { data } = await axios.post('/api/v1/admin/returns/process-refund', {
+      const { data } = await api.post('/admin/returns/process-refund', {
         orderId: returnData.orderId,
         itemIndex: returnData.itemIndex,
         refundMethod: 'Original Payment'
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
 
       if (data.success) {
@@ -121,12 +113,10 @@ const Returns = () => {
   const handleMarkReturned = async (returnData) => {
     setProcessingAction(true);
     try {
-      const { data } = await axios.post('/api/v1/admin/returns/mark-returned', {
+      const { data } = await api.post('/admin/returns/mark-returned', {
         orderId: returnData.orderId,
         itemIndex: returnData.itemIndex,
         returnTrackingNumber: `RET-${Date.now()}`
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
       });
 
       if (data.success) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Edit, Trash2, ChevronDown, ChevronUp, CheckCircle, Truck, Clock, X as XIcon, Package, Car } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 import socket from '../../socket';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -44,9 +44,7 @@ const Orders = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get('/admin/orders', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-      });
+      const { data } = await api.get('/admin/orders');
       setOrders(data.orders || []);
     } catch (err) {
       toast.error('Failed to fetch orders');
@@ -71,9 +69,7 @@ const Orders = () => {
 
   const handleStatusChange = async (order, newStatus) => {
     try {
-      const { data } = await axios.put(`/api/v1/admin/orders/${order._id}`, { status: newStatus }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-      });
+      const { data } = await api.put(`/admin/orders/${order._id}`, { status: newStatus });
       if (data.success) {
         toast.success('Order status updated');
         setOrders((prev) => prev.map((o) => o._id === order._id ? data.updatedOrder : o));
@@ -87,9 +83,7 @@ const Orders = () => {
 
   const handleDeleteOrder = async (orderId) => {
     try {
-      await axios.delete(`/api/v1/admin/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-      });
+      await api.delete(`/admin/orders/${orderId}`);
       setOrders((prev) => prev.filter((o) => o._id !== orderId));
       toast.success('Order deleted');
       setShowDeleteConfirm(null);

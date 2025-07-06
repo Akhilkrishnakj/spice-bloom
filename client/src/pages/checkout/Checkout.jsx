@@ -7,10 +7,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import AddressManager from './AddressMange';
 import Payment from './Payment';
 import OrderSummary from './OrderSummary';
-import axios from 'axios';
+import api from '../../api/axios';
 import { clearCart } from '../../redux/cartSlice';
 import { useNavigate } from 'react-router-dom';
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const CheckoutPage = () => {
   const cartItems = useSelector((state) => state.cart) || [];
@@ -218,11 +217,7 @@ const createOrderInBackend = async (paymentDetails = {}) => {
       return;
     }
 
-    await axios.post(`${API_BASE_URL}/order/create`, payload, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-      }
-    });
+    await api.post('/order/create', payload);
 
     dispatch(clearCart());
     setTimeout(() => {
@@ -238,7 +233,7 @@ const createOrderInBackend = async (paymentDetails = {}) => {
 
   if (selectedPaymentMethod === 'razorpay') {
     try {
-      const { data: orderData } = await axios.post(`${API_BASE_URL}/payment/create-order`, {
+      const { data: orderData } = await api.post('/payment/create-order', {
         amount: total.toFixed(2) * 100
       });
 

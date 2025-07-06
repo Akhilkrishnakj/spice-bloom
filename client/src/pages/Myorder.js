@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import {
   Search, Filter, Package, Truck, CheckCircle, Clock, X, ChevronDown, ChevronUp,
@@ -87,16 +87,10 @@ function App() {
   const [returnDescription, setReturnDescription] = useState('');
   const [submittingReturn, setSubmittingReturn] = useState(false);
   const navigate = useNavigate();
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1';
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const token = contextToken || localStorage.getItem('authToken');
-        const { data } = await axios.get(`${API_BASE_URL}/order/my-orders`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const { data } = await api.get('/order/my-orders');
         
         const ordersWithTracking = (data.orders || []).map(order => ({
           ...order,

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../index.css';
-import axios from 'axios';
+import api from '../api/axios';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,7 +20,6 @@ const VerifyOTP = () => {
   const phone = location.state?.phone || '';
   console.log('location state:', location.state);
   const password = location.state?.password || localStorage.getItem("verifyPassword");
-  const apiUrl = 'https://spice-bloom.onrender.com/api/v1';
 
 
 
@@ -85,7 +84,7 @@ const VerifyOTP = () => {
 
   setLoading(true);
   try {
-    const res = await axios.post(`${apiUrl}/auth/verify-otp`, {
+    const res = await api.post('/auth/verify-otp', {
       name,
       email,
       phone,
@@ -116,7 +115,7 @@ const VerifyOTP = () => {
  
   const handleResend = async () => {
     try {
-      await axios.post(`${apiUrl}/auth/send-otp`, { email, phone });
+      await api.post('/auth/send-otp', { email, phone });
       toast.success('OTP resent successfully');
       startResendTimer();
     } catch (err) {

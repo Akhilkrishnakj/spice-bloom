@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
 import { FiEdit, FiTrash2, FiPlus, FiX, FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,7 +44,7 @@ const ProductManagement = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data } = await axios.get('/api/v1/product/get-product');
+      const { data } = await api.get('/product/get-product');
       if (data?.success) {
         console.log('Fetched products:', data.products);
         setProducts(data.products);
@@ -73,7 +73,7 @@ const ProductManagement = () => {
   const handleDelete = async (productId) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
-      const { data } = await axios.delete(`/api/v1/product/delete-product/${productId}`);
+      const { data } = await api.delete(`/product/delete-product/${productId}`);
       if (data?.success) {
         toast.success('Product deleted successfully');
         fetchProducts();
@@ -127,7 +127,7 @@ const ProductManagement = () => {
       form.append('description', formData.description);
       form.append('category', formData.category);
       if (formData.image) form.append('image', formData.image);
-      const { data } = await axios.put(`/api/v1/product/update-product/${editingProduct._id}`, form);
+      const { data } = await api.put(`/product/update-product/${editingProduct._id}`, form);
       if (data?.success) {
         toast.success('Product updated successfully');
         setEditingProduct(null);

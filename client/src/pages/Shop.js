@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addToWishlist, removeFromWishlist } from '../redux/wishlistSlice';
 import { addToCart } from '../redux/cartSlice.js';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import api from '../api/axios';
 import FullPageLoader from '../components/FullPageLoader';
 
 const Shop = () => {
@@ -21,12 +21,10 @@ const Shop = () => {
   const [sortBy, setSortBy] = useState('name');
   const [showFilters, setShowFilters] = useState(false);
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1';
-
   // ✅ Fetch products from backend
   const getAllProducts = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/product/get-product`);
+      const { data } = await api.get('/product/get-product');
       if (data.success) {
         setProducts(data.products);
       }
