@@ -3,6 +3,7 @@ import Layout from '../components/Layouts/Layout';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import api from '../api/axios';
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -16,7 +17,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`https://spice-bloom.onrender.com/api/v1/auth/send-otp`, {
+      const res = await api.post('/auth/send-otp', {
         name, email, phone, password, confirmPassword
       });
       if (res.data.success) {
