@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import Invoice from '../components/Invoice';
 import socket from '../socket';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const statusConfig = {
   processing: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50/80', border: 'border-amber-200/50', label: 'Processing' },
@@ -699,6 +700,9 @@ function App() {
       </div>
     );
   };
+
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
+
 
   // Cancel Order Handler
   const handleCancelOrder = async (orderId) => {
