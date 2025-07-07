@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Home, Package, ShoppingCart, Users, Percent, LogOut, Menu, X,
-  Calendar as CalendarIcon, Settings, AlertCircle, RefreshCw, User
+  Calendar as CalendarIcon, Settings, AlertCircle, User
 } from 'lucide-react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
