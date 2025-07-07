@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Percent, DollarSign, Calendar, Tag } from 'lucide-react';
+import { X, Percent, DollarSign,  Tag } from 'lucide-react';
 
 const CouponModel = ({ isOpen, onClose, onSave, editData, categories = [] }) => {
   const [formData, setFormData] = useState(editData || {

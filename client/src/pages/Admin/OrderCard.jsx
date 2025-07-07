@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Edit, Trash2, Calendar, User, Mail, Phone } from 'lucide-react';
+import { Eye, Edit, Trash2, Calendar, User, Mail } from 'lucide-react';
 import { formatDate } from './utils/dataUtils';
 
 const OrderCard = ({ order, onView, onUpdateStatus, onDelete }) => {

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
-  CreditCard, MapPin, Check, Loader2, AlertCircle, Smartphone,
-  Wallet, Shield, ChevronRight, ArrowLeft, Package
+  CreditCard, MapPin, Check, Loader2, AlertCircle,  Shield, ChevronRight, ArrowLeft, Package
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import AddressManager from './AddressMange';

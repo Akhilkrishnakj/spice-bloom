@@ -1,21 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Home, Package, ShoppingCart, Users, Percent, LogOut, Menu, X, Search,
-  Bell, TrendingUp, Calendar as CalendarIcon, DollarSign, MoreHorizontal, Eye,
-  Filter, Download, ChevronRight, Activity, ArrowUpRight, Settings,
-  AlertCircle, RefreshCw, Star, TrendingDown, TrendingUp as TrendingUpIcon, User, CheckCircle, XCircle
+  Home, Package, ShoppingCart, Users, Percent, LogOut, Menu, X,
+  Calendar as CalendarIcon, Settings, AlertCircle, RefreshCw, User
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid } from 'recharts';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import ReactApexChart from 'react-apexcharts';
+import { ResponsiveContainer } from 'recharts';
 
-// Custom gradient text component
-const GradientText = ({ children, from, to }) => (
-  <span className={`bg-clip-text text-transparent bg-gradient-to-r ${from} ${to}`}>
-    {children}
-  </span>
-);
 
 // Loading component
 const LoadingSpinner = () => (
@@ -42,7 +34,7 @@ const ErrorMessage = ({ message, onRetry }) => (
 );
 
 // API service functions
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://spice-bloom.onrender.com/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://spice-bloom-api.onrender.com/api';
 
 const apiService = {
   // Dashboard stats
@@ -162,7 +154,6 @@ function App() {
   const [notifications, setNotifications] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
-  const [calendarData, setCalendarData] = useState(null);
   const [activeNav, setActiveNav] = useState('dashboard');
   const [salesTrendData, setSalesTrendData] = useState([]);
   const [period, setPeriod] = useState('week');

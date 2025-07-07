@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Trash2,
-  Edit3,
   Plus,
   RefreshCw,
   Search,
-  Filter,
   ChevronLeft
 } from 'lucide-react';
 import { getOffers, createOffer, deleteOffer, updateOffer, getCoupons, createCoupon, deleteCoupon, updateCoupon } from "../../services/offerService";

@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
 import Layout from '../../components/Layouts/Layout';
-import { FiUpload, FiX, FiPlus, FiTrash2, FiChevronLeft } from 'react-icons/fi';
+import {  FiX,  FiChevronLeft } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 const Products = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
   const [categories, setCategories] = useState([]);
 

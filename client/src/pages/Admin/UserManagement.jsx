@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { 
   Trash2, 
-  ShieldCheck, 
-  ShieldX, 
+  ShieldCheck,  
   UserCheck, 
   UserX, 
   Search, 
-  Loader2,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,

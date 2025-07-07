@@ -19,7 +19,6 @@ import { addToCart } from '../redux/cartSlice.js';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import FullPageLoader from '../components/FullPageLoader';
-import MiniLoader from '../components/MiniLoader';
 
 function App() {
   const [products, setProducts] = useState([]);

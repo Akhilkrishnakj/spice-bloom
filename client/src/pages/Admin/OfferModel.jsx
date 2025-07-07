@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Percent, DollarSign, Calendar, Tag } from 'lucide-react';
+import { X, Percent, DollarSign, Tag } from 'lucide-react';
 
 const CreateOfferModal = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({

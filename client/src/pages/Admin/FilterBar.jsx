@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, Calendar, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { getDateDaysAgo, getTodaysDate } from './utils/dataUtils';
 
 const FilterBar = ({ filters, setFilters }) => {
