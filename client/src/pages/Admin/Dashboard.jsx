@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import {
   Home, Package, ShoppingCart, Users, Percent, LogOut, Menu, X,
   Calendar as CalendarIcon, Settings, AlertCircle, User
@@ -132,6 +132,9 @@ const apiService = {
   },
 };
 
+// Lazy load ReactApexChart
+const ReactApexChart = lazy(() => import('react-apexcharts'));
+
 function App() {
   // State management
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -181,10 +184,25 @@ function App() {
     fetchData();
   }, [fetchData]);
 
-  // Auto-refresh data every 30 seconds
+  // Auto-refresh only when tab is active
   useEffect(() => {
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
+    let interval;
+    function onVisibilityChange() {
+      if (!document.hidden) {
+        fetchData();
+        interval = setInterval(fetchData, 30000);
+      } else if (interval) {
+        clearInterval(interval);
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    if (!document.hidden) {
+      interval = setInterval(fetchData, 30000);
+    }
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      if (interval) clearInterval(interval);
+    };
   }, [fetchData]);
 
   // Fetch sales trend data
@@ -400,6 +418,21 @@ function App() {
     }
   };
 
+  // Skeleton loader for recent orders
+  const OrdersSkeleton = () => (
+    <tbody>
+      {[...Array(5)].map((_, idx) => (
+        <tr key={idx} className="border-b last:border-b-0 animate-pulse">
+          <td className="p-3"><div className="h-4 bg-gray-200 rounded w-24" /></td>
+          <td className="p-3"><div className="h-4 bg-gray-200 rounded w-32 mb-1" /><div className="h-3 bg-gray-100 rounded w-20" /></td>
+          <td className="p-3"><div className="h-4 bg-gray-200 rounded w-16" /></td>
+          <td className="p-3"><div className="h-4 bg-gray-200 rounded w-14" /></td>
+          <td className="p-3"><div className="h-4 bg-gray-200 rounded w-20" /></td>
+        </tr>
+      ))}
+    </tbody>
+  );
+
   if (loading && !stats.length) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -481,12 +514,14 @@ function App() {
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={220}>
-                <ReactApexChart
-                  options={chartOptions}
-                  series={series}
-                  type="line"
-                  height={220}
-                />
+                <Suspense fallback={<div className="flex items-center justify-center h-56">Loading chart...</div>}>
+                  <ReactApexChart
+                    options={chartOptions}
+                    series={series}
+                    type="line"
+                    height={220}
+                  />
+                </Suspense>
               </ResponsiveContainer>
             </div>
             {/* New Users Chart (ECG style) */}
@@ -510,12 +545,14 @@ function App() {
                 </div>
               </div>
               {newUsersTrend.length > 0 ? (
-                <ReactApexChart
-                  options={newUsersChartOptions}
-                  series={newUsersSeries}
-                  type="line"
-                  height={120}
-                />
+                <Suspense fallback={<div className="flex items-center justify-center h-24">Loading chart...</div>}>
+                  <ReactApexChart
+                    options={newUsersChartOptions}
+                    series={newUsersSeries}
+                    type="line"
+                    height={120}
+                  />
+                </Suspense>
               ) : (
                 <div className="flex items-center justify-center h-24 text-gray-400 text-sm">No data available</div>
               )}
@@ -561,26 +598,30 @@ function App() {
                       <th className="p-3 text-left font-semibold text-emerald-700">Date</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {recentOrders.slice(0, 5).map((order) => (
-                      <tr key={order._id || order.id} className="border-b last:border-b-0 hover:bg-emerald-50/40 transition">
-                        <td className="p-3 font-mono">{order._id || order.id}</td>
-                        <td className="p-3">
-                          <div>
-                            <div className="font-semibold">{order.customer?.name || order.customer}</div>
-                            {order.customer?.email && (
-                              <div className="text-xs text-gray-500">{order.customer.email}</div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-3 font-bold text-emerald-700">₹{order.total}</td>
-                        <td className="p-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColor(order.status)}`}>{order.status}</span>
-                        </td>
-                        <td className="p-3">{new Date(order.date).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
+                  {loading ? (
+                    <OrdersSkeleton />
+                  ) : (
+                    <tbody>
+                      {recentOrders.slice(0, 5).map((order) => (
+                        <tr key={order._id || order.id} className="border-b last:border-b-0 hover:bg-emerald-50/40 transition">
+                          <td className="p-3 font-mono">{order._id || order.id}</td>
+                          <td className="p-3">
+                            <div>
+                              <div className="font-semibold">{order.customer?.name || order.customer}</div>
+                              {order.customer?.email && (
+                                <div className="text-xs text-gray-500">{order.customer.email}</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3 font-bold text-emerald-700">₹{order.total}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColor(order.status)}`}>{order.status}</span>
+                          </td>
+                          <td className="p-3">{new Date(order.date).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  )}
                 </table>
               </div>
             </div>
