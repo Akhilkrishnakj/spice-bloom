@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import ReactApexChart from 'react-apexcharts';
 import { ResponsiveContainer } from 'recharts';
 import FullPageLoader from '../../components/FullPageLoader';
 
