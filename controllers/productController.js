@@ -6,7 +6,10 @@ export const createProductController = async (req, res) => {
   try {
     const { name, description, price, category, quantity, shipping, benefits } = req.body;
 
-    // ✅ Get cloudinary URLs
+    // Defensive check for images
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).send({ error: "At least one product image is required" });
+    }
     const imageUrls = req.files.map(file => file.path);
 
     // Validation
@@ -43,8 +46,9 @@ export const createProductController = async (req, res) => {
       product
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).send({ success: false, error: "Error in product creation" });
+    // Improved error logging
+    console.error('Product creation error:', error, error.stack);
+    res.status(500).send({ success: false, error: "Error in product creation", details: error.message });
   }
 };
 
