@@ -45,6 +45,8 @@ const ProfilePage = () => {
     security: true,
   });
 
+  const { logout } = useAuth();
+
   // Fetch user data and stats on component mount
   useEffect(() => {
     fetchUserData();
