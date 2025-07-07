@@ -7,15 +7,7 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import ReactApexChart from 'react-apexcharts';
 import { ResponsiveContainer } from 'recharts';
-
-
-// Loading component
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center p-8">
-    <RefreshCw className="w-6 h-6 animate-spin text-blue-500" />
-    <span className="ml-2 text-gray-600">Loading...</span>
-  </div>
-);
+import FullPageLoader from '../../components/FullPageLoader';
 
 // Error component
 const ErrorMessage = ({ message, onRetry }) => (
@@ -34,7 +26,7 @@ const ErrorMessage = ({ message, onRetry }) => (
 );
 
 // API service functions
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://spice-bloom-api.onrender.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://spice-bloom-api.onrender.com/api/v1';
 
 const apiService = {
   // Dashboard stats
@@ -411,7 +403,7 @@ function App() {
   if (loading && !stats.length) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner />
+        <FullPageLoader />
       </div>
     );
   }
