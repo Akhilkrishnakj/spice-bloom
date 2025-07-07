@@ -12,7 +12,7 @@ import {
 import PropTypes from 'prop-types';
 import { getWalletBalance } from '../../api/wallet';
 
-const PaymentOptions = ({
+const PaymentOptions = React.memo(({
   selectedPaymentMethod,
   setSelectedPaymentMethod,
   formData,
@@ -287,7 +287,7 @@ const PaymentOptions = ({
       </div>
     </div>
   );
-};
+});
 
 PaymentOptions.propTypes = {
   selectedPaymentMethod: PropTypes.string.isRequired,

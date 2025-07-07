@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   CreditCard, MapPin, Check, Loader2, AlertCircle,  Shield, ChevronRight, ArrowLeft, Package
 } from 'lucide-react';
@@ -11,7 +11,8 @@ import { clearCart } from '../../redux/cartSlice';
 import { useNavigate } from 'react-router-dom';
 
 const CheckoutPage = () => {
-  const cartItems = useSelector((state) => state.cart) || [];
+  const cartItems = useSelector((state) => state.cart);
+  const safeCartItems = useMemo(() => cartItems ?? [], [cartItems]);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -41,13 +42,13 @@ const CheckoutPage = () => {
     walletType: 'paytm'
   });
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal >= 1000 ? 0 : 50;
-  const tax = parseFloat((subtotal * 0.05).toFixed(2));
-  const total = subtotal + shipping + tax;
+  const subtotal = useMemo(() => safeCartItems.reduce((sum, item) => sum + item.price * item.quantity, 0), [safeCartItems]);
+  const shipping = useMemo(() => subtotal >= 1000 ? 0 : 50, [subtotal]);
+  const tax = useMemo(() => parseFloat((subtotal * 0.05).toFixed(2)), [subtotal]);
+  const total = useMemo(() => subtotal + shipping + tax, [subtotal, shipping, tax]);
 
   // Debug total calculation
-  console.log("🔍 Cart Items:", cartItems);
+  console.log("🔍 Cart Items:", safeCartItems);
   console.log("🔍 Subtotal:", subtotal);
   console.log("🔍 Shipping:", shipping);
   console.log("🔍 Tax:", tax);
@@ -154,13 +155,13 @@ const createOrderInBackend = async (paymentDetails = {}) => {
   console.log("🟢 Original Payment Method:", selectedPaymentMethod);
 
   // 🔍 DEBUG: Check cart items structure
-  console.log("🔍 Cart Items Structure:", cartItems);
-  console.log("🔍 First Cart Item:", cartItems[0]);
-  console.log("🔍 First Cart Item Keys:", Object.keys(cartItems[0] || {}));
+  console.log("🔍 Cart Items Structure:", safeCartItems);
+  console.log("🔍 First Cart Item:", safeCartItems[0]);
+  console.log("🔍 First Cart Item Keys:", Object.keys(safeCartItems[0] || {}));
 
   try {
     const payload = {
-      items: cartItems.map((item, index) => {
+      items: safeCartItems.map((item, index) => {
         // 🔍 DEBUG: Check each item's _id
         console.log(`🔍 Item ${index} _id:`, item._id);
         console.log(`🔍 Item ${index} full object:`, item);
@@ -280,9 +281,9 @@ const createOrderInBackend = async (paymentDetails = {}) => {
 };
 
 
-  const handleAddressSelect = (address) => {
+  const handleAddressSelect = useCallback((address) => {
     setSelectedAddressId(address ? address._id : null);
-  };
+  }, []);
 
   if (paymentSuccess) {
     return (
@@ -429,7 +430,7 @@ const createOrderInBackend = async (paymentDetails = {}) => {
           {/* Order Summary */}
           <div className="lg:sticky lg:top-8">
             <OrderSummary
-              cartItems={cartItems}
+              cartItems={safeCartItems}
               subtotal={subtotal}
               shipping={shipping}
               tax={tax}

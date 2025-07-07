@@ -9,7 +9,7 @@ import {
   Shield
 } from 'lucide-react';
 
-const OrderSummary = ({ cartItems, subtotal, shipping, tax, total }) => {
+const OrderSummary = React.memo(({ cartItems, subtotal, shipping, tax, total }) => {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-6 border border-green-100 backdrop-blur-sm sticky top-8">
       <div className="flex items-center mb-6">
@@ -132,6 +132,6 @@ const OrderSummary = ({ cartItems, subtotal, shipping, tax, total }) => {
       </div>
     </div>
   );
-};
+});
 
 export default OrderSummary;

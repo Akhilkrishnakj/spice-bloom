@@ -6,7 +6,9 @@ import {
   fetchAddresses,
   createAddress,
   deleteAddress,
+  updateAddress
 } from '../../api/adress';
+import { debounce } from 'lodash';
 
 const AddressManager = ({
   onAddressSelect,
@@ -16,6 +18,16 @@ const AddressManager = ({
 }) => {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editAddressId, setEditAddressId] = useState(null);
+
+  // Debounced address validation/suggestion (replace with your API call if needed)
+  const debouncedAddressCheck = React.useMemo(
+    () => debounce((value) => {
+      // Example: console.log('Debounced address:', value);
+      // You can call an API here for validation or suggestions
+    }, 400),
+    []
+  );
 
   const loadSavedAddresses = useCallback(async () => {
     try {
@@ -46,6 +58,12 @@ const AddressManager = ({
   useEffect(() => {
     loadSavedAddresses();
   }, [loadSavedAddresses]);
+
+  useEffect(() => {
+    return () => {
+      debouncedAddressCheck.cancel(); // Clean up debounce on unmount
+    };
+  }, [debouncedAddressCheck]);
 
   const getAddressIcon = (type) => {
     switch (type) {
@@ -83,6 +101,10 @@ const AddressManager = ({
     }
 
     onFormDataChange({ ...formData, [name]: value });
+
+    if (name === 'address') {
+      debouncedAddressCheck(value);
+    }
   };
 
   const handleSaveNewAddress = async () => {
@@ -92,19 +114,35 @@ const AddressManager = ({
 
     if (firstName && lastName && email && address && city) {
       try {
-        await createAddress({
-          type: 'other',
-          firstName,
-          lastName,
-          phone,
-          email,
-          address,
-          city,
-          state,
-          zipCode,
-          country: country || 'India'
-        });
+        if (editAddressId) {
+          await updateAddress(editAddressId, {
+            type: 'other',
+            firstName,
+            lastName,
+            phone,
+            email,
+            address,
+            city,
+            state,
+            zipCode,
+            country: country || 'India'
+          });
+        } else {
+          await createAddress({
+            type: 'other',
+            firstName,
+            lastName,
+            phone,
+            email,
+            address,
+            city,
+            state,
+            zipCode,
+            country: country || 'India'
+          });
+        }
         setShowAddForm(false);
+        setEditAddressId(null);
         loadSavedAddresses();
       } catch (err) {
         console.error('Error saving address:', err);
@@ -219,6 +257,29 @@ const AddressManager = ({
                   </div>
                 </div>
 
+                {/* Edit Button */}
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    setShowAddForm(true);
+                    setEditAddressId(address._id);
+                    onFormDataChange({
+                      firstName: address.firstName,
+                      lastName: address.lastName,
+                      phone: address.phone,
+                      address: address.address,
+                      email: address.email,
+                      city: address.city,
+                      state: address.state,
+                      zipCode: address.zipCode,
+                      country: address.country
+                    });
+                  }}
+                  className="absolute bottom-4 left-4 text-blue-400 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-full transition-all duration-200"
+                >
+                  Edit
+                </button>
+
                 {/* Delete Button */}
                 <button
                   onClick={(e) => {
@@ -255,9 +316,12 @@ const AddressManager = ({
       {showAddForm && (
         <div className="space-y-6 bg-green-50 p-6 rounded-2xl border border-green-100 animate-fade-in">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-gray-800">Add New Address</h3>
+            <h3 className="text-xl font-semibold text-gray-800">{editAddressId ? 'Edit Address' : 'Add New Address'}</h3>
             <button
-              onClick={() => setShowAddForm(false)}
+              onClick={() => {
+                setShowAddForm(false);
+                setEditAddressId(null);
+              }}
               className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-all duration-200"
             >
               Cancel
