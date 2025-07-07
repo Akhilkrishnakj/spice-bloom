@@ -4,7 +4,7 @@ const BACKEND_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/
 
 const api = axios.create({
   baseURL: BACKEND_URL,
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // ✅ Log base URL only in development
@@ -22,7 +22,13 @@ api.interceptors.request.use(
     }
 
     config.headers.Accept = 'application/json';
-    config.headers['Content-Type'] = 'application/json';
+
+    // Only set Content-Type for non-FormData requests
+    if (!(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    } else {
+      delete config.headers['Content-Type'];
+    }
 
     if (process.env.NODE_ENV === 'development') {
       const fullUrl = `${config.baseURL}${config.url}`;
