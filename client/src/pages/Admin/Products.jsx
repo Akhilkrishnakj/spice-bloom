@@ -89,11 +89,7 @@ const Products = () => {
         }
       });
 
-      const { data } = await api.post('/product/create-product', productFormData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const { data } = await api.post('/product/create-product', productFormData);
 
       if (data?.success) {
         toast.success('Product created successfully');
@@ -308,7 +304,7 @@ const Products = () => {
                           <span>Upload images</span>
                           <input
                             id="file-upload"
-                            name="file-upload"
+                            name="images"
                             type="file"
                             className="sr-only"
                             multiple
