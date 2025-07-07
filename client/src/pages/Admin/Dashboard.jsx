@@ -257,10 +257,10 @@ function App() {
   // When period changes away from 'day', clear selectedDate
   useEffect(() => {
     if (period !== 'day' && selectedDate) setSelectedDate(null);
-  }, [period]);
+  }, [period, selectedDate]);
   useEffect(() => {
     if (newUsersPeriod !== 'day' && selectedDate) setSelectedDate(null);
-  }, [newUsersPeriod]);
+  }, [newUsersPeriod, selectedDate]);
 
   // Prepare data for ApexCharts
   const salesData = salesTrendData && salesTrendData.length > 0 ? salesTrendData : [];
@@ -334,7 +334,8 @@ function App() {
     }
   };
 
-  const fetchNewUsersTrend = async () => {
+  // Memoize fetchNewUsersTrend
+  const fetchNewUsersTrend = useCallback(async () => {
     try {
       let url = `${API_BASE_URL}/dashboard/new-users-trend?period=${newUsersPeriod}`;
       if (selectedDate && newUsersPeriod === 'day') {
@@ -345,7 +346,7 @@ function App() {
     } catch (err) {
       setNewUsersTrend([]);
     }
-  };
+  }, [newUsersPeriod, selectedDate]);
 
   useEffect(() => {
     fetchNewUsersTrend();

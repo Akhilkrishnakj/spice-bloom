@@ -169,13 +169,6 @@ const ProfilePage = () => {
     }
   };
 
-  const removeImagePreview = () => {
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   if (loading) {
     return <FullPageLoader />;
   }

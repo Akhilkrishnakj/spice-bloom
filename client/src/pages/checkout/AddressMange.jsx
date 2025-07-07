@@ -41,7 +41,7 @@ const AddressManager = ({
     } catch (err) {
       console.error('Error loading addresses:', err);
     }
-  }, [fetchAddresses, onAddressSelect, onFormDataChange, formData, selectedAddressId]);
+  }, [onAddressSelect, onFormDataChange, formData, selectedAddressId]);
 
   useEffect(() => {
     loadSavedAddresses();
