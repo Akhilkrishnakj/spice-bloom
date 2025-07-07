@@ -408,6 +408,17 @@ function App() {
     },
   };
 
+  // --- Status badge color ---
+  const statusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'delivered': return 'bg-emerald-100 text-emerald-700';
+      case 'processing': return 'bg-indigo-100 text-indigo-700';
+      case 'shipped': return 'bg-blue-100 text-blue-700';
+      case 'cancelled': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
   if (loading && !stats.length) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

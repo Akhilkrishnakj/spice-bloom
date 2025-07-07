@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  User, Mail, Phone, Edit3, Save, ShoppingBag, Wallet, LogOut, Bell, Shield, ChevronRight, Settings, TrendingUp, Camera, X, ArrowLeft
+  User, Mail, Phone, Edit3, Save, ShoppingBag, Wallet, LogOut, Bell, Shield, ChevronRight, Settings, TrendingUp, Camera, X, ArrowLeft, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getCurrentUser, updateUserProfile, getUserStats } from '../api/user';
