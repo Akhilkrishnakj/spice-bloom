@@ -10,7 +10,6 @@ const Signup = () => {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -84,7 +83,6 @@ const Signup = () => {
               placeholder="Confirm Password"
               required
             />
-            {message && <div className="text-center text-red-600 font-medium">{message}</div>}
             <button type="submit" className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold shadow hover:from-emerald-600 hover:to-green-700 hover:scale-105 transition-all duration-300 mt-2">Sign Up</button>
           </form>
           <div className="text-center text-gray-600 mt-2">

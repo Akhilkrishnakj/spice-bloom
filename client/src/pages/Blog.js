@@ -55,7 +55,7 @@ const Blog = () => {
       category: 'blended',
       title: 'Black Pepper Powder',
       img: 'https://imgs.search.brave.com/b5VyPDzrPGGFDacGPjDmY-xIiKxfiX3RKPXOuwxwYAE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTM3/NDAxOTI5OS9waG90/by9ncm91bmQtYmxh/Y2stcGVwcGVyLXNw/aWxsZWQtZnJvbS1h/LXRlYXNwb29uLmpw/Zz9zPTYxMng2MTIm/dz0wJms9MjAmYz1S/TEFuTXVuYW03VDE4/Ni0wWV90U0E3QVpV/cWRkdlh6T1pKSUc1/eVNXX1dvPQ',
-      description: 'Black pepper powder, often called the \"King of Spices,\" adds bold, pungent flavor to dishes. Sourced from sun-dried peppercorns, it\'s a staple in global cuisines. Rich in antioxidants, it enhances taste and supports digestion. A pinch of black pepper can transform both everyday meals and gourmet recipes.'
+      description: 'Black pepper powder, often called the "King of Spices," adds bold, pungent flavor to dishes. Sourced from sun-dried peppercorns, it\'s a staple in global cuisines. Rich in antioxidants, it enhances taste and supports digestion. A pinch of black pepper can transform both everyday meals and gourmet recipes.'
     },
     {
       id: 8,
@@ -69,7 +69,7 @@ const Blog = () => {
       category: 'blended',
       title: 'Cardamom Powder',
       img: 'https://imgs.search.brave.com/fCFKrQH9FhzrVNLHHVV9u4zlA-IdiiX8mGYQ0e4oeQI/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTE2/NTU1OTg1OC9waG90/by9jYXJkYW1vbS1w/b2RzLWFuZC1jYXJk/YW1vbS1wb3dkZXIt/Y2xvc2UtdXAuanBn/P3M9NjEyeDYxMiZ3/PTAmaz0yMCZjPXNP/cUdvTVBJNHRwVm9r/dTYyUUs0b0ppQkZL/SjA2aEZTS0tjX09q/Ym13MlE9',
-      description: 'Cardamom powder, known as the \"Queen of Spices,\" offers a sweet, floral aroma with hints of citrus. It\'s widely used in desserts, curries, and teas across South Asia. Rich in antioxidants, it aids digestion and freshens breath, making it both a flavorful and medicinal kitchen essential.'
+      description: 'Cardamom powder, known as the "Queen of Spices," offers a sweet, floral aroma with hints of citrus. It\'s widely used in desserts, curries, and teas across South Asia. Rich in antioxidants, it aids digestion and freshens breath, making it both a flavorful and medicinal kitchen essential.'
     },
     {
       id: 10,

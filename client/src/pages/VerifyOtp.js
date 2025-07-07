@@ -30,7 +30,7 @@ const VerifyOTP = () => {
     }
     inputRefs.current[0]?.focus();
     startResendTimer();
-  }, []);
+  }, [email, phone, navigate]);
 
   const startResendTimer = () => {
     setIsResendDisabled(true);

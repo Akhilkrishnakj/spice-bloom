@@ -3,8 +3,9 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import {
   Search, Filter, Package, Truck, CheckCircle, Clock, X, ChevronDown, ChevronUp,
-  Download, Calendar, MapPin, CreditCard, Navigation, Car, AlertCircle, DollarSign, CheckCircle2, XCircle, ArrowLeft, RotateCcw
-} from 'lucide-react'; // <-- Use RotateCcw instead of ReturnIcon
+  Download, Calendar, CreditCard, Navigation, Car, AlertCircle, DollarSign, CheckCircle2, XCircle, ArrowLeft, RotateCcw,
+  MapPin
+} from 'lucide-react';
 import Layout from '../components/Layouts/Layout';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -22,46 +23,12 @@ const statusConfig = {
   cancelled: { icon: X, color: 'text-red-600', bg: 'bg-red-50/80', border: 'border-red-200/50', label: 'Cancelled' }
 };
 
-console.log('socket:', socket);
-console.log('typeof socket.connect:', typeof socket.connect);
-
-// Enhanced tracking stages configuration
 const trackingStages = [
-  { 
-    id: 'processing', 
-    label: 'Processing', 
-    icon: Package, 
-    color: 'from-yellow-500 to-orange-500',
-    description: 'Your items are being prepared for shipment'
-  },
-  { 
-    id: 'shipped', 
-    label: 'Shipped', 
-    icon: Truck, 
-    color: 'from-purple-500 to-indigo-500',
-    description: 'Your order is on its way to you'
-  },
-  { 
-    id: 'out_for_delivery', 
-    label: 'Out for Delivery', 
-    icon: Car, 
-    color: 'from-indigo-500 to-blue-600',
-    description: 'Your order is out for delivery today'
-  },
-  { 
-    id: 'delivered', 
-    label: 'Delivered', 
-    icon: CheckCircle, 
-    color: 'from-green-500 to-emerald-600',
-    description: 'Your order has been successfully delivered'
-  },
-  { 
-    id: 'cancelled', 
-    label: 'Cancelled', 
-    icon: X, 
-    color: 'from-red-500 to-red-600',
-    description: 'Your order has been cancelled'
-  }
+  { id: 'processing', label: 'Processing', icon: Package, color: 'from-yellow-500 to-orange-500', description: 'Your items are being prepared for shipment' },
+  { id: 'shipped', label: 'Shipped', icon: Truck, color: 'from-purple-500 to-indigo-500', description: 'Your order is on its way to you' },
+  { id: 'out_for_delivery', label: 'Out for Delivery', icon: Car, color: 'from-indigo-500 to-blue-600', description: 'Your order is out for delivery today' },
+  { id: 'delivered', label: 'Delivered', icon: CheckCircle, color: 'from-green-500 to-emerald-600', description: 'Your order has been successfully delivered' },
+  { id: 'cancelled', label: 'Cancelled', icon: X, color: 'from-red-500 to-red-600', description: 'Your order has been cancelled' }
 ];
 
 // Add this helper for eligible cancel statuses
@@ -133,10 +100,6 @@ function App() {
       socket.emit('join-user-room', user._id);
 
       socket.on("order-status-update", (updateOrder) => {
-        console.log('📦 Received order status update:', updateOrder);
-        console.log('📦 New status:', updateOrder.status);
-        console.log('📦 Order ID:', updateOrder._id);
-        
         setOrders((prevOrders) => {
           const updatedOrders = prevOrders.map((order) =>
             order._id === updateOrder._id ? { 
@@ -145,13 +108,11 @@ function App() {
               trackingStages: generateTrackingStages(updateOrder.status || order.status, order)
             } : order
           );
-          console.log('📦 Updated orders:', updatedOrders);
           return updatedOrders;
         });
       });
 
       socket.on("tracking-update", (trackingData) => {
-        console.log('🚚 Received tracking update:', trackingData);
         if (trackingData.orderId) {
           setOrders((prevOrders) =>
             prevOrders.map((order) =>
@@ -167,7 +128,6 @@ function App() {
                 : order
             )
           );
-
           setLiveUpdates(prev => ({
             ...prev,
             [trackingData.orderId]: {
@@ -182,7 +142,6 @@ function App() {
       });
 
       socket.on("order-tracking-update", (trackingData) => {
-        console.log('🎯 Received personal tracking update:', trackingData);
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order._id === trackingData.orderId 
@@ -200,9 +159,7 @@ function App() {
         );
       });
 
-      // 🔄 Return request updates
       socket.on("return-request-update", (returnData) => {
-        console.log('🔄 Received return request update:', returnData);
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order._id === returnData.orderId 
@@ -220,9 +177,7 @@ function App() {
         toast.success('Return request status updated!');
       });
 
-      // 💰 Refund processed notification
       socket.on("refund-processed", (refundData) => {
-        console.log('💰 Refund processed:', refundData);
         toast.success(`Refund of ₹${refundData.refundAmount} processed successfully!`);
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
@@ -255,9 +210,6 @@ function App() {
   }, [user?._id]);
 
   const generateTrackingStages = (currentStatus, order = null) => {
-    console.log('🎯 Generating tracking stages for status:', currentStatus);
-    console.log('🎯 Order data:', order);
-    
     // If we have order data with statusTimeline, use it for cancelled orders
     if (order && order.statusTimeline && order.statusTimeline.length > 0 && currentStatus.toLowerCase() === 'cancelled') {
       // Only keep the first 'cancelled' entry
@@ -306,14 +258,12 @@ function App() {
         };
         timelineStages.push(cancelledStage);
       }
-      console.log('🎯 Generated timeline stages:', timelineStages);
       return timelineStages;
     }
     
     // Fallback to original logic for non-cancelled orders or orders without timeline
     const statusOrder = ['processing', 'shipped', 'out_for_delivery', 'delivered'];
     let currentIndex = statusOrder.indexOf(currentStatus.toLowerCase());
-    console.log('🎯 Current index:', currentIndex);
     
     if (currentIndex === -1) currentIndex = 0;
     
@@ -335,7 +285,6 @@ function App() {
           null
       }));
     
-    console.log('🎯 Generated stages:', stages);
     return stages;
   };
 

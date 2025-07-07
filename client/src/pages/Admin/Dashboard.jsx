@@ -205,10 +205,7 @@ function App() {
   useEffect(() => {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
-  }, []);
-
-  // Number formatter for large values
-  const formatNumber = (num) => num >= 1000 ? (num/1000).toFixed(1) + 'k' : num;
+  }, [fetchData]);
 
   // Fetch sales trend data
   const fetchSalesTrend = async () => {
@@ -228,22 +225,12 @@ function App() {
     fetchSalesTrend();
     const interval = setInterval(fetchSalesTrend, 15000);
     return () => clearInterval(interval);
-  }, [period, selectedDate]);
+  }, [period, selectedDate, fetchSalesTrend]);
 
   // Debug: log the data being passed to the chart
   useEffect(() => {
     console.log('Sales Trend Data:', salesTrendData);
   }, [salesTrendData]);
-
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'processing': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -271,40 +258,6 @@ function App() {
     }
   };
 
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-    // Implement search functionality here
-    // You can call an API or filter existing data
-  };
-
-  const handleExport = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_BASE_URL}/dashboard/export`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `dashboard-export-${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
-    } catch (error) {
-      console.error('Export error:', error);
-    }
-  };
-
-  const unreadNotifications = notifications.filter(n => !n.read).length;
-
   // --- Calendar click handler ---
   const handleCalendarChange = (date) => {
     const iso = date.toISOString().slice(0, 10);
@@ -320,17 +273,6 @@ function App() {
   useEffect(() => {
     if (newUsersPeriod !== 'day' && selectedDate) setSelectedDate(null);
   }, [newUsersPeriod]);
-
-  // --- Status badge color ---
-  const statusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case 'delivered': return 'bg-emerald-100 text-emerald-700';
-      case 'processing': return 'bg-indigo-100 text-indigo-700';
-      case 'shipped': return 'bg-blue-100 text-blue-700';
-      case 'cancelled': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
 
   // Prepare data for ApexCharts
   const salesData = salesTrendData && salesTrendData.length > 0 ? salesTrendData : [];
@@ -421,7 +363,7 @@ function App() {
     fetchNewUsersTrend();
     const interval = setInterval(fetchNewUsersTrend, 15000);
     return () => clearInterval(interval);
-  }, [newUsersPeriod, selectedDate]);
+  }, [newUsersPeriod, selectedDate, fetchNewUsersTrend]);
 
   // ECG-style ApexChart for new users
   const newUsersSeries = [{

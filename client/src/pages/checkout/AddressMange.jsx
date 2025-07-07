@@ -19,7 +19,7 @@ const AddressManager = ({
 
   useEffect(() => {
     loadSavedAddresses();
-  }, []);
+  }, [loadSavedAddresses]);
 
   const loadSavedAddresses = async () => {
     try {
