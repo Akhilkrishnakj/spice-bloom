@@ -3,9 +3,7 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import {
   Search, Filter, Package, Truck, CheckCircle, Clock, X, ChevronDown, ChevronUp,
-  RotateCcw, Phone, Star, Download, Eye, Calendar, MapPin, CreditCard, FileText, ShoppingBag,
-  Navigation, Home, Store, Car, Users, AlertCircle, Zap, ArrowRight, PlayCircle, PauseCircle,
-  RefreshCw, RotateCcw as ReturnIcon, DollarSign, CheckCircle2, XCircle, ArrowLeft
+  Download, Calendar, MapPin, CreditCard, Navigation, Car, AlertCircle, DollarSign, CheckCircle2, XCircle, ArrowLeft, ReturnIcon
 } from 'lucide-react';
 import Layout from '../components/Layouts/Layout';
 import jsPDF from 'jspdf';
@@ -77,8 +75,7 @@ function App() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [trackingData, setTrackingData] = useState({});
+
   const [liveUpdates, setLiveUpdates] = useState({});
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
   const [cancellingOrder, setCancellingOrder] = useState(null);
