@@ -3,8 +3,8 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import {
   Search, Filter, Package, Truck, CheckCircle, Clock, X, ChevronDown, ChevronUp,
-  Download, Calendar, MapPin, CreditCard, Navigation, Car, AlertCircle, DollarSign, CheckCircle2, XCircle, ArrowLeft, ReturnIcon
-} from 'lucide-react';
+  Download, Calendar, MapPin, CreditCard, Navigation, Car, AlertCircle, DollarSign, CheckCircle2, XCircle, ArrowLeft, RotateCcw
+} from 'lucide-react'; // <-- Use RotateCcw instead of ReturnIcon
 import Layout from '../components/Layouts/Layout';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -1029,7 +1029,7 @@ function App() {
                                             onClick={() => setShowReturnModal({ open: true, order, itemIndex })}
                                             className="flex items-center gap-2 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg text-sm font-medium hover:bg-orange-200 transition-colors"
                                           >
-                                            <ReturnIcon className="w-4 h-4" />
+                                            <RotateCcw className="w-4 h-4" />
                                             Request Return
                                           </button>
                                         )}
@@ -1153,7 +1153,7 @@ function App() {
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <div className="flex items-center gap-3">
-                  <ReturnIcon className="h-6 w-6 text-orange-600" />
+                  <RotateCcw className="h-6 w-6 text-orange-600" />
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">Request Return</h2>
                     <p className="text-sm text-gray-500">{showReturnModal.order?.orderNumber} - {showReturnModal.order?.items[showReturnModal.itemIndex]?.name}</p>
@@ -1248,7 +1248,7 @@ function App() {
                       </>
                     ) : (
                       <>
-                        <ReturnIcon className="w-4 h-4" />
+                        <RotateCcw className="w-4 h-4" />
                         Submit Return Request
                       </>
                     )}
