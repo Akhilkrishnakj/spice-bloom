@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Home, Package, ShoppingCart, Users, Percent, LogOut, Menu, X,
   Calendar as CalendarIcon, Settings, AlertCircle, RefreshCw, User
@@ -149,10 +149,6 @@ function App() {
   // Data states
   const [stats, setStats] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
-  const [sidebarData, setSidebarData] = useState({});
-  const [userProfile, setUserProfile] = useState(null);
-  const [notifications, setNotifications] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
   const [activeNav, setActiveNav] = useState('dashboard');
   const [salesTrendData, setSalesTrendData] = useState([]);
@@ -171,35 +167,27 @@ function App() {
   ];
 
   // Fetch all data
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
     try {
-      const [statsData, ordersData, sidebarInfo, userInfo, notificationsData] = await Promise.all([
+      const [statsData, ordersData] = await Promise.all([
         apiService.getStats(),
-        apiService.getRecentOrders(),
-        apiService.getSidebarData(),
-        apiService.getUserProfile(),
-        apiService.getNotifications()
+        apiService.getRecentOrders()
       ]);
-      
       setStats(statsData);
       setRecentOrders(ordersData);
-      setSidebarData(sidebarInfo);
-      setUserProfile(userInfo);
-      setNotifications(notificationsData);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Initial data fetch
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   // Auto-refresh data every 30 seconds
   useEffect(() => {
@@ -208,7 +196,7 @@ function App() {
   }, [fetchData]);
 
   // Fetch sales trend data
-  const fetchSalesTrend = async () => {
+  const fetchSalesTrend = useCallback(async () => {
     try {
       let url = `${API_BASE_URL}/dashboard/sales-trend?period=${period}`;
       if (selectedDate && period === 'day') {
@@ -219,7 +207,7 @@ function App() {
     } catch (err) {
       setSalesTrendData([]);
     }
-  };
+  }, [period, selectedDate]);
 
   useEffect(() => {
     fetchSalesTrend();

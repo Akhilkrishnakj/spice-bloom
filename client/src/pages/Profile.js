@@ -13,7 +13,6 @@ import MiniLoader from '../components/MiniLoader';
 const DEFAULT_PROFILE_IMAGE = 'https://imgs.search.brave.com/d3lvpgl8vJsPCMoI_aQMaWe0MymkSAc4y9KtWcdp-rQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/ZnJlZS12ZWN0b3Iv/Ymx1ZS1jaXJjbGUt/d2l0aC13aGl0ZS11/c2VyXzc4MzcwLTQ3/MDcuanBnP3NlbXQ9/YWlzX2l0ZW1zX2Jv/b3N0ZWQmdz03NDA';
 
 const ProfilePage = () => {
-  const { user: authUser, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(true);

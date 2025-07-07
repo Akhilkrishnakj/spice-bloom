@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   MapPin, Plus, Check, Home, Building, Star, Trash2, Circle
 } from 'lucide-react';
@@ -17,11 +17,7 @@ const AddressManager = ({
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  useEffect(() => {
-    loadSavedAddresses();
-  }, [loadSavedAddresses]);
-
-  const loadSavedAddresses = async () => {
+  const loadSavedAddresses = useCallback(async () => {
     try {
       const { data } = await fetchAddresses();
       setSavedAddresses(data);
@@ -45,7 +41,11 @@ const AddressManager = ({
     } catch (err) {
       console.error('Error loading addresses:', err);
     }
-  };
+  }, [fetchAddresses, onAddressSelect, onFormDataChange, formData, selectedAddressId]);
+
+  useEffect(() => {
+    loadSavedAddresses();
+  }, [loadSavedAddresses]);
 
   const getAddressIcon = (type) => {
     switch (type) {
