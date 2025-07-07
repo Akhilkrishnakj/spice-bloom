@@ -1,5 +1,4 @@
 import Order from "../models/orderModel.js";
-import { io } from "../server.js";
 import trackingService from "../utils/trackingService.js";
 import Razorpay from "razorpay";
 import User from "../models/userModel.js";

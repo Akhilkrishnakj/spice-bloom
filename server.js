@@ -40,7 +40,6 @@ const server = http.createServer(app);
 const allowedOrigins = [
   'http://localhost:3000',
   'https://spicebloom.netlify.app',
-  'https://spicebloom.vercel.app'
 ];
 
 app.use(cors({
