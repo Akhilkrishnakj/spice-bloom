@@ -7,8 +7,6 @@ import {
   MapPin
 } from 'lucide-react';
 import Layout from '../components/Layouts/Layout';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { useNavigate } from 'react-router-dom';
 import Invoice from '../components/Invoice';
 import socket from '../socket';
@@ -326,63 +324,6 @@ function App() {
 
   const toggleOrderExpansion = (orderId) => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
-  };
-
-  const downloadInvoice = (order) => {
-    const doc = new jsPDF();
-    doc.setFont('helvetica');
-
-    // Amazon-style header
-    doc.setFontSize(18);
-    doc.text('INVOICE', 14, 18);
-    doc.setFontSize(12);
-    doc.text(`Order #: ${order.orderNumber}`, 14, 28);
-    doc.text(`Order Date: ${formatDate(order.createdAt)}`, 14, 36);
-    if (order.delivery?.deliveredDate) doc.text(`Delivered: ${formatDate(order.delivery.deliveredDate)}`, 14, 44);
-
-    // Shipping Address
-    doc.setFontSize(14);
-    doc.text('Shipping Address:', 14, 54);
-    doc.setFontSize(11);
-    let y = 60;
-    [order.shippingAddress.name, order.shippingAddress.street, `${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zip}`, order.shippingAddress.country]
-      .forEach(line => { doc.text(line, 14, y); y += 6; });
-
-    // Table of items
-    doc.setFontSize(13);
-    doc.text('Order Details:', 14, y + 4);
-    autoTable(doc, {
-      startY: y + 8,
-      head: [['Product', 'Qty', 'Unit Price', 'Total']],
-      body: order.items.map(item => [item.name, item.quantity, `₹${item.price.toFixed(2)}`, `₹${(item.price * item.quantity).toFixed(2)}`]),
-      theme: 'grid',
-      headStyles: { fillColor: [240, 240, 240], textColor: 20, fontStyle: 'bold' },
-      bodyStyles: { textColor: 50 },
-      styles: { fontSize: 11, cellPadding: 2 },
-      columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 15 }, 2: { cellWidth: 25 }, 3: { cellWidth: 25 } }
-    });
-    let finalY = doc.lastAutoTable.finalY + 6;
-
-    // Summary
-    doc.setFontSize(12);
-    doc.text('Summary:', 14, finalY);
-    doc.setFontSize(11);
-    doc.text(`Subtotal: ₹${order.subtotal.toFixed(2)}`, 14, finalY + 6);
-    doc.text(`Shipping: ₹${order.shipping.toFixed(2)}`, 14, finalY + 12);
-    doc.text(`Tax: ₹${order.tax.toFixed(2)}`, 14, finalY + 18);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Total: ₹${order.total.toFixed(2)}`, 14, finalY + 26);
-    doc.setFont('helvetica', 'normal');
-
-    // Payment Method
-    doc.text(`Payment Method: ${order.paymentMethod}`, 14, finalY + 36);
-    if (order.tracking?.trackingNumber) doc.text(`Tracking: ${order.tracking.trackingNumber}`, 14, finalY + 42);
-
-    // Footer
-    doc.setFontSize(10);
-    doc.text('Thank you for shopping with SpiceBloom!', 14, 285);
-
-    doc.save(`SpiceBloom-Invoice-${order.orderNumber}.pdf`);
   };
 
   const StatusBadge = ({ status }) => {

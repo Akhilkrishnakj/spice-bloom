@@ -17,7 +17,6 @@ const STATUS_OPTIONS = [
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [sortAsc, setSortAsc] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showStatusDropdown, setShowStatusDropdown] = useState(null);
@@ -59,8 +58,7 @@ const Orders = () => {
       order.orderNumber?.toLowerCase().includes(search.toLowerCase()) ||
       order.buyer?.name?.toLowerCase().includes(search.toLowerCase()) ||
       order.buyer?.email?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   const sortedOrders = [...filteredOrders].sort((a, b) => {

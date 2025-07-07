@@ -167,18 +167,16 @@ const handleAddToCart = (product) => {
     // Try multiple ways to identify blends
     const blends = products.filter(p => {
       const category = String(p.category || p.type || p.productType || '').toLowerCase();
-      const name = String(p.name || p.title || '').toLowerCase();
       return category.includes('blend') || 
              category.includes('masala') ||
-             name.includes('blend') ||
-             name.includes('masala') ||
+             String(p.name || p.title || '').toLowerCase().includes('blend') ||
+             String(p.name || p.title || '').toLowerCase().includes('masala') ||
              category === 'blends';
     });
 
     // Try multiple ways to identify spices
     const spices = products.filter(p => {
       const category = String(p.category || p.type || p.productType || '').toLowerCase();
-      const name = String(p.name || p.title || '').toLowerCase();
       return category.includes('spice') || 
              category.includes('powder') ||
              category === 'spices' ||
@@ -203,7 +201,7 @@ const handleAddToCart = (product) => {
     return { blends, spices, homeProducts };
   };
 
-  const { blends, spices, homeProducts } = getFilteredProducts();
+  const { homeProducts } = getFilteredProducts();
 
   // Normalize product data to ensure all required fields exist
   const normalizedProduct = (product) => ({
