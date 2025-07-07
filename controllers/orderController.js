@@ -1,6 +1,5 @@
 import Order from "../models/orderModel.js";
 import User from "../models/userModel.js";
-import { io } from "../server.js";
 import Razorpay from "razorpay";
 
 export const getAllOrders = async (req, res) => {
@@ -47,7 +46,7 @@ export const updateOrderStatus = async (req, res) => {
     ).populate("items.productId").populate("buyer", "name email"); // include buyer if needed
 
     // ✅ Emit to client
-    io.emit("order-status-update", order);
+    global.io.emit("order-status-update", order);
 
     res.json({ success: true, message: "Order status updated", order });
   } catch (err) {
