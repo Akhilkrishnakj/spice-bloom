@@ -33,8 +33,8 @@ export const sendOTP = async (req, res) => {
     const mailOptions = {
       from: process.env.NODEMAILER_EMAIL,
       to: cleanEmail,
-      subject: "Your OTP Code",
-      text: `Your OTP is ${otp}`,
+      subject: "Your Spice Bloom OTP Code",
+      text: `Your One-Time Password (OTP) is: ${otp}. Please use this code to complete your verification. Do not share this OTP with anyone.`
     };
 
     console.log("Sent OTP:", otp);

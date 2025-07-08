@@ -128,18 +128,18 @@ const AddressManager = ({
             country: country || 'India'
           });
         } else {
-          await createAddress({
-            type: 'other',
-            firstName,
-            lastName,
-            phone,
-            email,
-            address,
-            city,
-            state,
-            zipCode,
-            country: country || 'India'
-          });
+        await createAddress({
+          type: 'other',
+          firstName,
+          lastName,
+          phone,
+          email,
+          address,
+          city,
+          state,
+          zipCode,
+          country: country || 'India'
+        });
         }
         setShowAddForm(false);
         setEditAddressId(null);

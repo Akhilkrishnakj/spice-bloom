@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 
 const OrderSummary = React.memo(({ cartItems, subtotal, shipping, tax, total }) => {
+  console.log("OrderSummary cartItems:", cartItems);
+
   return (
     <div className="bg-white rounded-2xl shadow-xl p-6 border border-green-100 backdrop-blur-sm sticky top-8">
       <div className="flex items-center mb-6">
@@ -28,9 +30,10 @@ const OrderSummary = React.memo(({ cartItems, subtotal, shipping, tax, total }) 
           <div key={item._id || item.id} className="flex items-center space-x-4 p-4 bg-gradient-to-br from-green-50 to-white rounded-2xl border border-green-100 shadow-sm">
             <div className="relative">
               <img
-                src={item.image}
+                src={item.image || item.img || '/default-placeholder.jpg'}
                 alt={item.name}
                 className="w-16 h-16 object-cover rounded-xl shadow-md"
+                onError={e => { e.target.onerror = null; e.target.src = '/default-placeholder.jpg'; }}
               />
               <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-green-600 to-green-700 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg">
                 {item.quantity}
