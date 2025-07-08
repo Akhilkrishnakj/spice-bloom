@@ -83,6 +83,8 @@ const VerifyOTP = () => {
   }
 
   setLoading(true);
+  setError(''); // Clear any previous errors
+  
   try {
     const res = await api.post('/auth/verify-otp', {
       name,
@@ -92,21 +94,32 @@ const VerifyOTP = () => {
       password
     });
 
-    console.log("Sending to server:", { name, email, phone, otp: otpCode, password });
     console.log("Server response:", res.data);
+    console.log("Token received:", res.data.token);
+    console.log("User received:", res.data.user);
 
     if (res && res.data && res.data.success === true) {
-      login(res.data.user, res.data.token);  // ✅ use login function only
-      toast.success('Account verified successfully!');
-      navigate('/success');
+      // Check if token is present
+      if (res.data.token && res.data.user) {
+        login(res.data.user, res.data.token);
+        toast.success('Account verified successfully!');
+        navigate('/success');
+      } else {
+        console.error("Missing token or user data:", res.data);
+        setError('Server response incomplete - missing authentication data');
+        toast.error('Authentication failed - please try again');
+      }
     } else {
-      console.warn("Unexpected server data:", res.data);
+      console.warn("Unexpected server response:", res.data);
       setError(res.data.message || 'Invalid OTP');
+      toast.error(res.data.message || 'Invalid OTP');
     }
 
   } catch (err) {
     console.error("Axios error:", err);
-    setError(err.response?.data?.message || 'OTP verification failed. Please try again.');
+    const errorMessage = err.response?.data?.message || 'OTP verification failed. Please try again.';
+    setError(errorMessage);
+    toast.error(errorMessage);
   } finally {
     setLoading(false);
   }
