@@ -49,13 +49,21 @@ const AuthSuccess = () => {
       // Normal signup/OTP flow
       const storedToken = localStorage.getItem('authToken');
       const storedUser = localStorage.getItem('user');
-      if (storedToken && storedUser) {
-        toast.success('Account created and verified successfully!');
-      } else {
-        toast.error('No authentication token received. Please log in.');
-        navigate('/login');
+      if (!storedToken || !storedUser) {
+        // Wait 200ms and check again
+        setTimeout(() => {
+          const retryToken = localStorage.getItem('authToken');
+          const retryUser = localStorage.getItem('user');
+          if (retryToken && retryUser) {
+            toast.success('Account created and verified successfully!');
+          } else {
+            toast.error('No authentication token received. Please log in.');
+            navigate('/login');
+          }
+        }, 200);
         return;
       }
+      toast.success('Account created and verified successfully!');
     }
 
     // Redirect to home after 3.5 seconds
