@@ -86,6 +86,11 @@ export const verifyOTP = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
+    console.log("Generated JWT token:", token);
+
+    if (!token) {
+      return res.status(500).json({ success: false, message: "Failed to generate auth token" });
+    }
 
     await Otp.deleteMany({ email: cleanEmail });
 
