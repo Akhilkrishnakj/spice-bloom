@@ -34,7 +34,7 @@ const EditProductModal = ({ isOpen, onClose, product, onUpdate }) => {
 
     try {
       const { data } = await api.put(
-        `/api/v1/product/update-product/${product._id}`,
+        `/product/update-product/${product._id}`,
         {
           description: formData.description,
           benefits: formData.benefits
